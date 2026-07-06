@@ -26,3 +26,7 @@ Thumbs.db
 .idea/
 *.iml
 
+
+# local sqlite db (runtime)
+data/app.db
+data/*.db
