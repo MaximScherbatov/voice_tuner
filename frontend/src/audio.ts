@@ -21,6 +21,7 @@ function computeRms(buf: Float32Array): number {
 
 // dynamic import to avoid killing the app at boot
 let PitchDetector: any = null;
+
 async function ensurePitchyLoaded() {
   if (PitchDetector) return;
   const mod: any = await import("pitchy");
@@ -33,10 +34,17 @@ export class AudioEngine {
   // mic
   private micStream: MediaStream | null = null;
   private micTrack: MediaStreamTrack | null = null;
+
   private analyser: AnalyserNode | null = null;
   private data: Float32Array | null = null;
   private detector: any = null;
+
   private inputGain: GainNode | null = null;
+
+  // PATCH D: pre-analysis filters/comp (stability)
+  private hp: BiquadFilterNode | null = null;
+  private lp: BiquadFilterNode | null = null;
+  private comp: DynamicsCompressorNode | null = null;
 
   // spectrum
   private freqData: Uint8Array | null = null;
@@ -52,12 +60,18 @@ export class AudioEngine {
   /** Keep synchronous to stay inside user gesture chain */
   ensureContextUnlockedSync() {
     if (!this.ctx) {
-      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext);
-      this.ctx = new AudioCtx();
+      const AudioCtx = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
+
+      // PATCH E: latencyHint
+      this.ctx = new AudioCtx({ latencyHint: "interactive" });
     }
+
     if (this.ctx.state !== "running") {
-      try { this.ctx.resume(); } catch {}
+      try {
+        this.ctx.resume();
+      } catch {}
     }
+
     if (!this.outGain) {
       this.outGain = this.ctx.createGain();
       this.outGain.gain.value = 1.0;
@@ -68,30 +82,92 @@ export class AudioEngine {
   async initMic(deviceId?: string) {
     this.ensureContextUnlockedSync();
     await ensurePitchyLoaded();
-
     this.stopMic();
 
-    const audioConstraints: any = {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: false
-    };
-    if (deviceId) audioConstraints.deviceId = { exact: deviceId };
+    // PATCH A: prefer RAW mic (no EC/NS/AGC) + advanced(Chromium) + fallback
+    const rawConstraints: any = {
+      echoCancellation: false,
+      noiseSuppression: false,
+      autoGainControl: false,
 
-    this.micStream = await navigator.mediaDevices.getUserMedia({ audio: audioConstraints });
+      channelCount: 1,
+      sampleRate: 48000,
+      sampleSize: 16,
+
+      advanced: [
+        { echoCancellation: false },
+        { noiseSuppression: false },
+        { autoGainControl: false },
+
+        // Chromium-specific (ignored where unsupported)
+        { googEchoCancellation: false },
+        { googEchoCancellation2: false },
+        { googAutoGainControl: false },
+        { googNoiseSuppression: false },
+        { googHighpassFilter: false },
+        { googTypingNoiseDetection: false },
+        { googAudioMirroring: false },
+      ],
+    };
+
+    if (deviceId) rawConstraints.deviceId = { exact: deviceId };
+
+    try {
+      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: rawConstraints });
+    } catch (e) {
+      // fallback (for devices/browsers that reject raw constraints)
+      const safeFallback: any = {
+        echoCancellation: true,
+        noiseSuppression: true,
+        autoGainControl: false,
+      };
+      if (deviceId) safeFallback.deviceId = { exact: deviceId };
+      this.micStream = await navigator.mediaDevices.getUserMedia({ audio: safeFallback });
+    }
+
     this.micTrack = this.micStream.getAudioTracks()[0] ?? null;
+
+    // one-time debug: what browser actually applied
+    try {
+      // eslint-disable-next-line no-console
+      console.debug("[mic settings]", this.micTrack?.getSettings(), this.micTrack?.getConstraints());
+    } catch {}
 
     const src = this.ctx!.createMediaStreamSource(this.micStream);
 
     this.inputGain = this.ctx!.createGain();
     this.inputGain.gain.value = 1.0;
 
+    // PATCH D: filters + compressor before analyser (do NOT connect to destination)
+    this.hp = this.ctx!.createBiquadFilter();
+    this.hp.type = "highpass";
+    this.hp.frequency.value = 60;
+    this.hp.Q.value = 0.707;
+
+    this.lp = this.ctx!.createBiquadFilter();
+    this.lp.type = "lowpass";
+    this.lp.frequency.value = 4200;
+    this.lp.Q.value = 0.707;
+
+    this.comp = this.ctx!.createDynamicsCompressor();
+    this.comp.threshold.value = -30;
+    this.comp.knee.value = 18;
+    this.comp.ratio.value = 2.5;
+    this.comp.attack.value = 0.003;
+    this.comp.release.value = 0.12;
+
     this.analyser = this.ctx!.createAnalyser();
-    this.analyser.fftSize = 4096;
+
+    // PATCH B: bigger buffer for more stable pitch (esp. lower notes)
+    this.analyser.fftSize = 8192;
+
     this.analyser.smoothingTimeConstant = 0.7;
 
-    // do NOT connect to destination
-    src.connect(this.inputGain);
+    // wiring: src -> hp -> lp -> comp -> inputGain -> analyser
+    src.connect(this.hp);
+    this.hp.connect(this.lp);
+    this.lp.connect(this.comp);
+    this.comp.connect(this.inputGain);
     this.inputGain.connect(this.analyser);
 
     const bufLen = this.analyser.fftSize;
@@ -102,13 +178,32 @@ export class AudioEngine {
   }
 
   stopMic() {
-    try { this.micStream?.getTracks().forEach((t) => t.stop()); } catch {}
+    try {
+      this.micStream?.getTracks().forEach((t) => t.stop());
+    } catch {}
+
+    // best-effort disconnect graph
+    try {
+      this.hp?.disconnect();
+      this.lp?.disconnect();
+      this.comp?.disconnect();
+      this.inputGain?.disconnect();
+      this.analyser?.disconnect();
+    } catch {}
+
     this.micStream = null;
     this.micTrack = null;
+
     this.analyser = null;
     this.data = null;
     this.detector = null;
+
     this.inputGain = null;
+
+    this.hp = null;
+    this.lp = null;
+    this.comp = null;
+
     this.freqData = null;
   }
 
@@ -176,8 +271,8 @@ export class AudioEngine {
 
       o.connect(g);
       g.connect(this.refGain);
-
       o.start(now);
+
       this.refOscs.push(o);
     }
 
@@ -200,7 +295,11 @@ export class AudioEngine {
       g.gain.linearRampToValueAtTime(0.0001, now + 0.05);
       for (const o of oscs) o.stop(now + 0.06);
     } catch {
-      for (const o of oscs) { try { o.stop(); } catch {} }
+      for (const o of oscs) {
+        try {
+          o.stop();
+        } catch {}
+      }
     }
   }
 
@@ -221,6 +320,7 @@ export class AudioEngine {
 
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
+
     osc.type = "sine";
     osc.frequency.value = 880;
 
@@ -231,8 +331,9 @@ export class AudioEngine {
 
     osc.connect(g);
     g.connect(this.outGain);
+
     osc.start(now);
-    osc.stop(now + 0.10);
+    osc.stop(now + 0.1);
   }
 
   frame(targetHz: number): Frame {
@@ -241,10 +342,21 @@ export class AudioEngine {
     }
 
     this.analyser.getFloatTimeDomainData(this.data);
+
+    // PATCH C: remove DC offset (helps pitch stability)
+    let mean = 0;
+    for (let i = 0; i < this.data.length; i++) mean += this.data[i];
+    mean /= this.data.length;
+    for (let i = 0; i < this.data.length; i++) this.data[i] -= mean;
+
     const rms = computeRms(this.data);
+
     const [pitch, clarity] = this.detector.findPitch(this.data, this.ctx.sampleRate);
 
-    if (!pitch) return { hz: null, clarity, cents: null, rms };
+    // PATCH C: robust pitch check
+    if (!Number.isFinite(pitch) || pitch <= 0) {
+      return { hz: null, clarity, cents: null, rms };
+    }
 
     const cents = centsDeviation(pitch, targetHz);
     return { hz: pitch, clarity, cents, rms };
@@ -252,17 +364,19 @@ export class AudioEngine {
 
   getSpectrumBars(nBars = 18): number[] {
     if (!this.analyser || !this.freqData) return Array(nBars).fill(0);
+
     this.analyser.getByteFrequencyData(this.freqData);
 
     const bins = this.freqData.length;
     const maxIdx = Math.floor(bins * 0.35); // low-mid focus
-    const out: number[] = [];
 
+    const out: number[] = [];
     for (let i = 0; i < nBars; i++) {
       const t = i / Math.max(1, nBars - 1);
       const idx = Math.floor(Math.pow(t, 2.0) * maxIdx);
       out.push((this.freqData[idx] ?? 0) / 255);
     }
+
     return out;
   }
 }
