@@ -1,0 +1,24 @@
+services:
+  voice-backend:
+    build: ./backend
+    container_name: voice-backend
+    environment:
+      - APP_ENV=prod
+      - DB_URL=sqlite:////data/app.db
+      - JWT_SECRET=${JWT_SECRET}
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+    networks:
+      - web
+
+  voice-frontend:
+    build: ./frontend
+    container_name: voice-frontend
+    restart: unless-stopped
+    networks:
+      - web
+
+networks:
+  web:
+    external: true
