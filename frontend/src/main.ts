@@ -1,8 +1,8 @@
 import "./style.css";
 import { AudioEngine, midiToHz } from "./audio";
 import { EXERCISES, ExerciseDef, Lang, getExerciseById, buildFlowTargets } from "./exercises";
-
 import { GhostPack, loadGhostPack, saveGhostPack, isGhostCompatible } from "./ghost";
+
 /** Crash overlay */
 const showCrash = (title: string, err: any) => {
   const msg = err && (err.stack || err.message) ? (err.stack || err.message) : String(err);
@@ -11,14 +11,15 @@ const showCrash = (title: string, err: any) => {
   document.body.innerHTML = `
 <pre style="white-space:pre-wrap;padding:16px;background:#0b0f14;color:#fb7185;
 font:14px/1.4 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace">
-
 ${title}
 
 ${msg}
-
 </pre>`;
 };
-window.addEventListener("error", (e) => showCrash("RUNTIME ERROR:", (e as any).error || (e as any).message || e));
+
+window.addEventListener("error", (e) =>
+  showCrash("RUNTIME ERROR:", (e as any).error || (e as any).message || e),
+);
 window.addEventListener("unhandledrejection", (e) =>
   showCrash("UNHANDLED PROMISE REJECTION:", (e as any).reason || e),
 );
@@ -57,6 +58,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     save_error: "Ошибка сохранения",
     stop_to_edit_root: "Остановите упражнение (STOP), чтобы менять стартовую ноту.",
     hint_start: "Нажмите START, чтобы начать упражнение.",
+    legend_target: "Цель",
+    legend_current: "Текущая",
+    legend_ghost: "Ghost",
   },
   en: {
     theme: "Theme",
@@ -83,6 +87,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     save_error: "Save error",
     stop_to_edit_root: "Stop the exercise (STOP) to change the root note.",
     hint_start: "Press START to begin the exercise.",
+    legend_target: "Target",
+    legend_current: "Current",
+    legend_ghost: "Ghost",
   },
 };
 const t = (k: string) => I18N[LANG][k] ?? k;
@@ -146,11 +153,12 @@ function slopeCentsPerS(series: Array<{ t: number; cents: number }>): number | n
   return num / den;
 }
 
-/** auth + API */
+/** auth (anonymous token) */
 let AUTH_TOKEN: string | null = localStorage.getItem("vtp_token");
 
 async function ensureAuthToken() {
   if (AUTH_TOKEN) return AUTH_TOKEN;
+
   const urls = ["/api/auth/anonymous", "/auth/anonymous"];
   let lastErr: any = null;
 
@@ -169,6 +177,7 @@ async function ensureAuthToken() {
       lastErr = e;
     }
   }
+
   throw new Error(`Cannot create anonymous user token: ${String(lastErr)}`);
 }
 
@@ -178,6 +187,7 @@ async function postJson(url: string, data: any) {
       await ensureAuthToken();
     } catch {}
   }
+
   return fetch(url, {
     method: "POST",
     headers: {
@@ -241,7 +251,7 @@ function ensureDefaults() {
   setIfNull("vtp_tolPct", "1.5");
   setIfNull("vtp_lang", LANG);
 
-  // Ref volume default: >= 50 and sticky
+  // Ref volume default >= 50 and sticky
   const rvStr = localStorage.getItem("vtp_refVol");
   const rv = Number(rvStr);
   const rvUserSet = localStorage.getItem("vtp_refVolUserSet");
@@ -270,7 +280,7 @@ const ICONS = {
   spk: `<svg class="ico" viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12Zm0-9.5v2.12A9 9 0 0 1 20 12a9 9 0 0 1-3.5 7.38v2.12A11 11 0 0 0 22 12 11 11 0 0 0 16.5 2.5Z"/></svg>`,
   play: `<svg class="ico" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`,
   stop: `<svg class="ico" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`,
-  gear: `<svg class="ico" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
+  gear: `<svg class="ico" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
   copy: `<svg class="ico" viewBox="0 0 24 24"><path d="M16 1H6a2 2 0 0 0-2 2v10h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H10V7h9v14Z"/></svg>`,
   download: `<svg class="ico" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2Zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1Z"/></svg>`,
   share: `<svg class="ico" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a2.5 2.5 0 0 0 0-1.39l7-4.11A2.99 2.99 0 1 0 14 5a2.9 2.9 0 0 0 .04.49l-7 4.11a3 3 0 1 0 0 4.8l7.12 4.17c-.03.16-.05.32-.05.49a3 3 0 1 0 3-3Z"/></svg>`,
@@ -306,12 +316,15 @@ try {
 
   let tolPct = clamp(loadNum("vtp_tolPct", 1.5), 0.5, 3.0);
 
+  // Root note user-picked
   let rootMidiUser = Number(localStorage.getItem("vtp_targetMidi") ?? "60");
   if (!Number.isFinite(rootMidiUser)) rootMidiUser = 60;
 
+  // runtime target
   let targetMidi = rootMidiUser;
   let targetHz = midiToHz(targetMidi);
 
+  // constants
   const SAMPLE_MS = 50;
   const MIN_HZ = 70;
   const MAX_HZ = 1000;
@@ -320,6 +333,7 @@ try {
   const CLARITY_OFF = 0.62;
   const RMS_MIN = 0.006;
 
+  // SNR/noise-floor (as before)
   const NOISE_RMS_INIT = 0.003;
   const NOISE_ALPHA_UP = 0.002;
   const NOISE_ALPHA_DOWN = 0.06;
@@ -335,6 +349,7 @@ try {
   const getAlpha = () => (ringMode === "score" ? 0.2 : 0.35);
   const getRingAlpha = () => (ringMode === "score" ? 0.2 : 0.28);
 
+  // runtime state
   let running = false;
   let lastSampleTs = 0;
 
@@ -346,22 +361,32 @@ try {
 
   let lastFrame = { hz: null as number | null, cents: null as number | null, clarity: 0, rms: 0 };
 
-  let hintEl: HTMLDivElement;
+  // success feedback (beep + flash)
+  let inTuneMs = 0;
+  let lastSuccessAt = 0;
+  const SUCCESS_HOLD_MS = 300;
+  const SUCCESS_COOLDOWN_MS = 1200;
+
+  // hint lock
   let hintLockUntil = 0;
+  let hintEl: HTMLDivElement;
   const setHint = (msg: string, lockMs = 0) => {
     hintEl.textContent = msg;
     hintLockUntil = Math.max(hintLockUntil, nowMs() + lockMs);
   };
 
+  // window samples
   type Sample = { t: number; hz: number; ratio: number; errPct: number; cents: number };
   let win: Sample[] = [];
 
+  // gating
   let gateOn = false;
   let lastGoodAt = 0;
   let lastStableAt = 0;
   let lastGoodSample: Sample | null = null;
   let centsHold: number | null = null;
 
+  // SNR state
   let noiseRms = NOISE_RMS_INIT;
   let snrDbDisp = 0;
   let energyKeepDisp = false;
@@ -369,9 +394,11 @@ try {
 
   let recentRealPitchAt = 0;
 
+  // EQ
   const EQ_N = 18;
   let eqVals = Array(EQ_N).fill(0);
 
+  // Exercise Runner (Flow)
   type StepMetric = {
     step_index: number;
     target_midi: number;
@@ -408,7 +435,6 @@ try {
 
   let exStartedAt = 0;
   let exTotalMaxMs = 0;
-
   let exStepStartedAt = 0;
 
   let exHoldMs = loadNum("vtp_exHoldMs", 3000);
@@ -416,6 +442,7 @@ try {
   let exTransposeCount = loadNum("vtp_exTransposeCount", 8);
   let exTransposeStep = loadNum("vtp_exTransposeStep", 1);
 
+  // per-step accumulators
   let exGreenConfirmMs = 0;
   let exTimeToGreenMs: number | null = null;
   let exTimeInGreenMs = 0;
@@ -441,13 +468,13 @@ try {
   const EX_CONFIRM_MS = 220;
   const EX_TRACE_PERIOD_MS = 100;
 
+  // Results UI state
   let lastExercisePayload: any = null;
   let lastExerciseTitle = "";
   let lastExerciseFinishedAt: Date | null = null;
+  let lastGhost: GhostPack | null = null;
 
-  
-  let ghostPrevForResults: GhostPack | null = null;
-function resetPitchState() {
+  function resetPitchState() {
     win = [];
     hzDisp = null;
     ratioDisp = null;
@@ -459,6 +486,8 @@ function resetPitchState() {
     lastStableAt = 0;
     lastGoodSample = null;
     centsHold = null;
+
+    inTuneMs = 0;
 
     noiseRms = NOISE_RMS_INIT;
     snrDbDisp = 0;
@@ -505,15 +534,14 @@ function resetPitchState() {
   const refVol0 = loadNum("vtp_refVol", 60);
   const micSens0 = loadNum("vtp_micSens", 120);
 
+  // UI
   app.innerHTML = `
   <div class="container">
-
     <div class="card">
       <div class="header">
         <div>
           <div class="brand">Voice Trainer</div>
         </div>
-
         <div class="badges" style="display:flex; gap:10px; align-items:center">
           <button class="iconBtn mini" id="btnTopLang"><span class="lbl">${LANG.toUpperCase()}</span></button>
           <button class="iconBtn mini" id="btnTopTheme">${ICONS.stop}<span class="lbl">${t("theme")}</span></button>
@@ -521,7 +549,6 @@ function resetPitchState() {
         </div>
       </div>
 
-      <!-- subtitle + chips (moved down) -->
       <div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap">
         <div class="small" id="subTitle">—</div>
         <span class="badge" id="badgeState">Status: idle</span>
@@ -530,12 +557,10 @@ function resetPitchState() {
 
       <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
         <select class="btnLike" id="selExercise" style="min-width:280px"></select>
-
         <button class="iconBtn" id="btnStart">${ICONS.play}<span class="lbl">${t("start")}</span></button>
         <button class="iconBtn" id="btnStop">${ICONS.stop}<span class="lbl">${t("stop")}</span></button>
       </div>
 
-      <!-- Note Picker -->
       <div class="notePickerRow">
         <button class="iconBtn mini" id="btnSemiDown">${ICONS.left}<span class="lbl">-1</span></button>
         <div class="notePill" id="rootNotePill">C3</div>
@@ -562,7 +587,6 @@ function resetPitchState() {
       <div class="grid">
         <div class="ringWrap">
           <div class="ring" id="ringBox">
-
             <svg viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.06)" stroke-width="5" fill="none"/>
               <circle id="ringErr" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.10)" stroke-width="5"
@@ -713,7 +737,6 @@ function resetPitchState() {
         <div class="small" id="micMeta"></div>
       </div>
     </div>
-
   </div>
   `;
 
@@ -726,9 +749,6 @@ function resetPitchState() {
   const subTitle = q<HTMLDivElement>("#subTitle");
   const badgeState = q<HTMLSpanElement>("#badgeState");
   const badgeSave = q<HTMLSpanElement>("#badgeSave");
-
-  const indMic = q<HTMLSpanElement>("#indMic");
-  const indSpk = q<HTMLSpanElement>("#indSpk");
 
   const btnTopLang = q<HTMLButtonElement>("#btnTopLang");
   const btnTopTheme = q<HTMLButtonElement>("#btnTopTheme");
@@ -746,12 +766,16 @@ function resetPitchState() {
   const octPill = q<HTMLDivElement>("#octPill");
   const rootHzLabel = q<HTMLDivElement>("#rootHzLabel");
 
-  const stateLine = q<HTMLDivElement>("#stateLine");
   const stRoot = q<HTMLSpanElement>("#stRoot");
   const stMic = q<HTMLSpanElement>("#stMic");
   const stRef = q<HTMLSpanElement>("#stRef");
   const stExSep = q<HTMLSpanElement>("#stExSep");
   const stEx = q<HTMLSpanElement>("#stEx");
+
+  const indMic = q<HTMLSpanElement>("#indMic");
+  const indSpk = q<HTMLSpanElement>("#indSpk");
+
+  const ringBox = q<HTMLDivElement>("#ringBox");
   const ringProg = q<SVGCircleElement>("#ringProg");
   const ringErr = q<SVGCircleElement>("#ringErr");
 
@@ -809,7 +833,13 @@ function resetPitchState() {
   eq.innerHTML = Array.from({ length: EQ_N }).map(() => "<span></span>").join("");
   const eqBars = Array.from(eq.querySelectorAll("span")) as HTMLSpanElement[];
 
-  // modal open/close
+  // flash helper
+  const flashSuccess = () => {
+    ringBox.classList.add("flash");
+    setTimeout(() => ringBox.classList.remove("flash"), 180);
+  };
+
+  // settings modal open/close
   const openSettings = () => {
     settingsModal.style.display = "block";
     selLang.value = LANG;
@@ -817,6 +847,7 @@ function resetPitchState() {
   const closeSettings = () => {
     settingsModal.style.display = "none";
   };
+
   btnTopSettings.onclick = openSettings;
   btnSettingsClose.onclick = closeSettings;
   settingsModal.addEventListener("click", (e) => {
@@ -831,7 +862,7 @@ function resetPitchState() {
   btnTopTheme.onclick = () => {
     const t0 = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
     applyTheme(t0);
-    if (lastExercisePayload) renderResults(lastExercisePayload);
+    if (lastExercisePayload) renderResults(lastExercisePayload, lastGhost);
   };
 
   // language dropdown
@@ -847,6 +878,7 @@ function resetPitchState() {
     engine.setReferenceVolume((Number(refVol.value) / 100) * 0.6);
     engine.setMicSensitivity(Number(micSens.value) / 100);
   };
+
   refVol.oninput = () => {
     localStorage.setItem("vtp_refVolUserSet", "1");
     saveNum("vtp_refVol", Number(refVol.value));
@@ -863,7 +895,7 @@ function resetPitchState() {
     tolPct = clamp(Number(tolPctSlider.value), 0.5, 3.0);
     localStorage.setItem("vtp_tolPct", String(tolPct));
     tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
-    if (lastExercisePayload) renderResults(lastExercisePayload);
+    if (lastExercisePayload) renderResults(lastExercisePayload, lastGhost);
   };
 
   // exercise sliders
@@ -971,10 +1003,6 @@ function resetPitchState() {
   selExercise.value = getExerciseById(exIdSaved).id;
   selExercise.onchange = () => localStorage.setItem("vtp_exId", selExercise.value);
 
-  // init runtime target
-  setRuntimeTargetMidi(rootMidiUser);
-  syncRootUI();
-
   // marker
   const setMarkerCents = (cents: number | null) => {
     if (cents === null) {
@@ -992,13 +1020,16 @@ function resetPitchState() {
   const setRing = (fill01: number, errFill01: number, errPct: number | null) => {
     const CIRC_IN = 263.89;
     const CIRC_OUT = 289.03;
+
     ringProg.setAttribute("stroke-dashoffset", String(CIRC_IN * (1 - clamp(fill01, 0, 1))));
     ringErr.setAttribute("stroke-dashoffset", String(CIRC_OUT * (1 - clamp(errFill01, 0, 1))));
+
     if (errPct === null) {
       ringProg.setAttribute("stroke", "rgba(255,255,255,.25)");
       ringErr.setAttribute("stroke", "rgba(255,255,255,.10)");
       return;
     }
+
     if (Math.abs(errPct) <= tolPct) {
       ringProg.setAttribute("stroke", "rgba(52,211,153,.95)");
       ringErr.setAttribute("stroke", "rgba(255,255,255,.10)");
@@ -1071,6 +1102,10 @@ function resetPitchState() {
       yVals.push(p.target_midi);
       yVals.push(p.pitch_midi_x100 / 100);
     }
+    if (ghost?.trace?.length) {
+      for (const gp of ghost.trace as any[]) yVals.push((gp.pitch_midi_x100 ?? 0) / 100);
+    }
+
     const yMin = Math.min(...yVals) - 1.0;
     const yMax = Math.max(...yVals) + 1.0;
 
@@ -1078,8 +1113,9 @@ function resetPitchState() {
     const x0 = padL, x1 = w - padR, y0 = padT, y1 = h - padB;
 
     const xScale = (tms: number) => x0 + (tms / tMax) * (x1 - x0);
-    const yScale = (midi: number) => y0 + ((yMax - midi) / Math.max(1e-6, (yMax - yMin))) * (y1 - y0);
+    const yScale = (midi: number) => y0 + ((yMax - midi) / Math.max(1e-6, yMax - yMin)) * (y1 - y0);
 
+    // grid
     ctx.strokeStyle = grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -1090,6 +1126,7 @@ function resetPitchState() {
       ctx.stroke();
     }
 
+    // green band
     const tolCents = 1200 * Math.log2(1 + tolPct / 100);
     const tolSemi = tolCents / 100;
 
@@ -1109,6 +1146,7 @@ function resetPitchState() {
     ctx.closePath();
     ctx.fill();
 
+    // step separators
     ctx.strokeStyle = sep;
     ctx.lineWidth = 1;
     for (let i = 1; i < trace.length; i++) {
@@ -1121,8 +1159,9 @@ function resetPitchState() {
       }
     }
 
+    // target
     ctx.strokeStyle = "rgba(52,211,153,.75)";
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 3;
     ctx.beginPath();
     for (let i = 0; i < trace.length; i++) {
       const x = xScale(trace[i].t_ms);
@@ -1132,14 +1171,12 @@ function resetPitchState() {
     }
     ctx.stroke();
 
-    
-    // --- GHOST (previous attempt) ---
+    // ghost
     if (ghost && Array.isArray(ghost.trace) && ghost.trace.length > 2) {
       const gTrace = ghost.trace as any[];
       const gTMax = Math.max(...gTrace.map((p) => p.t_ms ?? 0), 1);
-
-      ctx.strokeStyle = "rgba(148,163,184,.45)"; // slate/gray ghost
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(148,163,184,.45)";
+      ctx.lineWidth = 3;
       ctx.beginPath();
       for (let i = 0; i < gTrace.length; i++) {
         const x = x0 + ((gTrace[i].t_ms ?? 0) / gTMax) * (x1 - x0);
@@ -1150,8 +1187,9 @@ function resetPitchState() {
       ctx.stroke();
     }
 
-ctx.strokeStyle = "rgba(96,165,250,.95)";
-    ctx.lineWidth = 2;
+    // current (EMA)
+    ctx.strokeStyle = "rgba(96,165,250,.95)";
+    ctx.lineWidth = 3;
     let sm: number | null = null;
     ctx.beginPath();
     for (let i = 0; i < trace.length; i++) {
@@ -1164,6 +1202,28 @@ ctx.strokeStyle = "rgba(96,165,250,.95)";
     }
     ctx.stroke();
 
+    // legend
+    const lx = x1 - 168;
+    const ly = y0 + 10;
+    ctx.font = "12px ui-sans-serif";
+    ctx.fillStyle = label;
+
+    ctx.strokeStyle = "rgba(52,211,153,.75)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(lx, ly); ctx.lineTo(lx + 22, ly); ctx.stroke();
+    ctx.fillText(t("legend_target"), lx + 28, ly + 4);
+
+    ctx.strokeStyle = "rgba(96,165,250,.95)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 16); ctx.lineTo(lx + 22, ly + 16); ctx.stroke();
+    ctx.fillText(t("legend_current"), lx + 28, ly + 20);
+
+    ctx.strokeStyle = "rgba(148,163,184,.45)";
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(lx, ly + 32); ctx.lineTo(lx + 22, ly + 32); ctx.stroke();
+    ctx.fillText(t("legend_ghost"), lx + 28, ly + 36);
+
+    // y labels
     ctx.fillStyle = label;
     ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
     ctx.fillText(String(yMax.toFixed(1)), 8, y0 + 10);
@@ -1297,10 +1357,11 @@ ctx.strokeStyle = "rgba(96,165,250,.95)";
       stop_reason: reason,
     };
 
-    // ghost overlay: load previous attempt BEFORE overwriting it
-    const ghostPrev = loadGhostPack(payload.exercise_id);
-    ghostPrevForResults = (ghostPrev && isGhostCompatible(ghostPrev, payload)) ? ghostPrev : null;
-lastExercisePayload = payload;
+    // ghost: load previous before saving new
+    const prevGhost = loadGhostPack(payload.exercise_id);
+    lastGhost = (prevGhost && isGhostCompatible(prevGhost, payload)) ? prevGhost : null;
+
+    lastExercisePayload = payload;
     lastExerciseTitle = exDef?.title?.[LANG] ?? payload.exercise_id;
     lastExerciseFinishedAt = new Date();
 
@@ -1314,11 +1375,10 @@ lastExercisePayload = payload;
       setHint(`${t("save_error")}: ${String(e)}`, 7000);
     }
 
-    renderResults(payload, ghostPrevForResults);
-    
-    // store current attempt as next ghost
+    renderResults(payload, lastGhost);
     saveGhostPack(payload.exercise_id, payload);
-resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
 
     running = false;
     engine.stopMic();
@@ -1383,6 +1443,83 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
   };
   btnStop.onclick = () => exStop("stopped");
 
+  // init
+  setRuntimeTargetMidi(rootMidiUser);
+  syncRootUI();
+
+  // success marker/ring UI
+  setMarkerCents(null);
+
+  // draw results trace on theme/tol changes
+  tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
+  exHoldMeta.textContent = `${Math.round(exHoldMs)} ms`;
+  exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ms`;
+  exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
+
+  // updateUI
+  const updateUI = () => {
+    subTitle.textContent = `${trainMode.toUpperCase()} • ${ringMode.toUpperCase()} • ±${tolPct.toFixed(1)}%`;
+
+    indMic.classList.toggle("on-mic", running && engine.isMicReady());
+    indSpk.classList.toggle("on-ref", engine.isReferencePlaying());
+
+    tipPhones.style.display = trainMode === "assist" && engine.isReferencePlaying() ? "block" : "none";
+
+    badgeState.textContent = exActive ? "Status: exercise" : (running ? "Status: idle (mic on)" : "Status: idle");
+
+    stRoot.textContent = `Root: ${midiToNote(rootMidiUser).name}${midiToNote(rootMidiUser).octave}`;
+    stMic.textContent = (running && engine.isMicReady()) ? "on" : "off";
+    stRef.textContent = engine.isReferencePlaying() ? "on" : "off";
+
+    if (exActive && exDef) {
+      stExSep.style.display = "inline";
+      stEx.style.display = "inline";
+      stEx.textContent = `EX: ${exDef.id} ${exStepIdx + 1}/${exTargets.length}`;
+    } else {
+      stExSep.style.display = "none";
+      stEx.style.display = "none";
+      stEx.textContent = "";
+    }
+
+    micMeta.textContent =
+      `rms: ${lastFrame.rms.toFixed(3)} • clarity: ${(lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2)} • ` +
+      `noise: ${noiseRms.toFixed(4)} • snr: ${snrDbDisp.toFixed(1)} dB • keep: ${energyKeepDisp ? "yes" : "no"}`;
+
+    targetHzBig.textContent = `${targetHz.toFixed(1)} Hz`;
+
+    const n = midiToNote(targetMidi);
+    targetLine.textContent = LANG === "ru" ? `Нота ${n.ru} (${n.name}${n.octave})` : `Note ${n.name}${n.octave}`;
+    noteRu.textContent = n.ru;
+    noteBig.textContent = `${n.name}${n.octave}`;
+
+    if (!running || !engine.isMicReady()) {
+      hzBig.textContent = "— Hz";
+      delta.textContent = "—%";
+      setMarkerCents(null);
+      setRing(ringFill, ringErrFill, null);
+      if (nowMs() >= hintLockUntil) setHint(t("hint_start"), 0);
+      return;
+    }
+
+    if (hzDisp === null || ratioDisp === null) {
+      hzBig.textContent = "— Hz";
+      delta.textContent = "—%";
+      setMarkerCents(null);
+      setRing(ringFill, ringErrFill, null);
+      return;
+    }
+
+    const pct = ratioDisp * 100;
+    const errPct = (ratioDisp - 1) * 100;
+
+    hzBig.textContent = `${hzDisp.toFixed(1)} Hz`;
+    delta.textContent = `${pct.toFixed(1)}%`;
+
+    setMarkerCents(centsHold);
+    setRing(ringFill, ringErrFill, errPct);
+  };
+
+  // rafLoop
   const rafLoop = () => {
     if (!running) return;
 
@@ -1449,13 +1586,16 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
     } else {
       if (gateOn) {
         const holdMs = energyKeep ? HOLD_WHILE_ENERGY_MS : DROPOUT_HOLD_MS;
+
         if (!energyKeep) {
           if (!belowEnergySince) belowEnergySince = tNow;
         } else {
           belowEnergySince = 0;
         }
+
         const silenceLongEnough = belowEnergySince ? (tNow - belowEnergySince >= SILENCE_RELEASE_MS) : false;
         const noPitchTooLong = tNow - lastGoodAt > holdMs;
+
         if (silenceLongEnough && noPitchTooLong) {
           gateOn = false;
           belowEnergySince = 0;
@@ -1465,6 +1605,7 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     }
 
+    // sample @ 20fps
     if (tNow - lastSampleTs >= SAMPLE_MS) {
       lastSampleTs = tNow;
 
@@ -1496,6 +1637,7 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
         hzDisp = ema(hzDisp, medHz, a);
         ratioDisp = ema(ratioDisp, medRatio, a);
 
+        // ring fills
         const fillTarget = clamp(ratioDisp!, 0, 1);
         ringFill = ema(ringFill, fillTarget, getRingAlpha());
 
@@ -1510,7 +1652,17 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
 
         lastStableAt = tNow;
 
-        // Exercise update (same logic as before)
+        // --- SUCCESS feedback (beep + flash) ---
+        if (Math.abs(medErrPct) <= tolPct) inTuneMs += SAMPLE_MS;
+        else inTuneMs = Math.max(0, inTuneMs - SAMPLE_MS * 2);
+
+        if (inTuneMs >= SUCCESS_HOLD_MS && (tNow - lastSuccessAt) >= SUCCESS_COOLDOWN_MS) {
+          lastSuccessAt = tNow;
+          engine.playSuccessBeep();
+          flashSuccess();
+        }
+
+        // --- Exercise update ---
         if (exActive && exDef) {
           if (tNow - exStartedAt >= exTotalMaxMs) {
             exSteps.push(exFinalizeStep());
@@ -1583,6 +1735,7 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         }
       } else {
+        // graceful decay
         const withinGrace =
           gateOn && (energyKeep ? tNow - lastGoodAt <= HOLD_WHILE_ENERGY_MS : tNow - lastGoodAt <= DROPOUT_HOLD_MS);
         const recentlyStable = tNow - lastStableAt <= (energyKeep ? HOLD_WHILE_ENERGY_MS : DROPOUT_HOLD_MS);
@@ -1609,82 +1762,11 @@ resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
     requestAnimationFrame(rafLoop);
   };
 
-  const updateUI = () => {
-    subTitle.textContent = `${trainMode.toUpperCase()} • ${ringMode.toUpperCase()} • ±${tolPct.toFixed(1)}%`;
-
-    // indicators (not buttons)
-    indMic.classList.toggle("on-mic", running && engine.isMicReady());
-    indSpk.classList.toggle("on-ref", engine.isReferencePlaying());
-
-    tipPhones.style.display = trainMode === "assist" && engine.isReferencePlaying() ? "block" : "none";
-
-    badgeState.textContent = exActive ? "Status: exercise" : (running ? "Status: idle (mic on)" : "Status: idle");
-
-    stRoot.textContent =
-      `Root: ${midiToNote(rootMidiUser).name}${midiToNote(rootMidiUser).octave}`;
-
-    stMic.textContent = (running && engine.isMicReady()) ? "on" : "off";
-    stRef.textContent = engine.isReferencePlaying() ? "on" : "off";
-
-    if (exActive && exDef) {
-      stExSep.style.display = "inline";
-      stEx.style.display = "inline";
-      stEx.textContent = `EX: ${exDef.id} ${exStepIdx + 1}/${exTargets.length}`;
-    } else {
-      stExSep.style.display = "none";
-      stEx.style.display = "none";
-      stEx.textContent = "";
-    }
-
-
-    micMeta.textContent =
-      `rms: ${lastFrame.rms.toFixed(3)} • clarity: ${(lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2)} • ` +
-      `noise: ${noiseRms.toFixed(4)} • snr: ${snrDbDisp.toFixed(1)} dB • keep: ${energyKeepDisp ? "yes" : "no"}`;
-
-    targetHzBig.textContent = `${targetHz.toFixed(1)} Hz`;
-    {
-      const n = midiToNote(targetMidi);
-      const label = LANG === "ru" ? `Нота ${n.ru} (${n.name}${n.octave})` : `Note ${n.name}${n.octave}`;
-      targetLine.textContent = label;
-      noteRu.textContent = n.ru;
-      noteBig.textContent = `${n.name}${n.octave}`;
-    }
-
-    if (!running || !engine.isMicReady()) {
-      hzBig.textContent = "— Hz";
-      delta.textContent = "—%";
-      setMarkerCents(null);
-      setRing(ringFill, ringErrFill, null);
-      if (nowMs() >= hintLockUntil) setHint(t("hint_start"), 0);
-      return;
-    }
-
-    if (hzDisp === null || ratioDisp === null) {
-      hzBig.textContent = "— Hz";
-      delta.textContent = "—%";
-      setMarkerCents(null);
-      setRing(ringFill, ringErrFill, null);
-      return;
-    }
-
-    const pct = ratioDisp * 100;
-    const errPct = (ratioDisp - 1) * 100;
-
-    hzBig.textContent = `${hzDisp.toFixed(1)} Hz`;
-    delta.textContent = `${pct.toFixed(1)}%`;
-
-    setMarkerCents(centsHold);
-    setRing(ringFill, ringErrFill, errPct);
-  };
-
-  // init settings UI
-  tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
-  exHoldMeta.textContent = `${Math.round(exHoldMs)} ms`;
-  exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ms`;
-  exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
-
-  setHint(t("hint_start"), 0);
+  // periodic UI update
   setInterval(updateUI, 140);
+
+  // initial hint
+  setHint(t("hint_start"), 0);
 } catch (e) {
   showCrash("BOOT ERROR:", e);
 }
