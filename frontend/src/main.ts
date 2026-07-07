@@ -2,6 +2,7 @@ import "./style.css";
 import { AudioEngine, midiToHz } from "./audio";
 import { EXERCISES, ExerciseDef, Lang, getExerciseById, buildFlowTargets } from "./exercises";
 
+import { GhostPack, loadGhostPack, saveGhostPack, isGhostCompatible } from "./ghost";
 /** Crash overlay */
 const showCrash = (title: string, err: any) => {
   const msg = err && (err.stack || err.message) ? (err.stack || err.message) : String(err);
@@ -444,7 +445,9 @@ try {
   let lastExerciseTitle = "";
   let lastExerciseFinishedAt: Date | null = null;
 
-  function resetPitchState() {
+  
+  let ghostPrevForResults: GhostPack | null = null;
+function resetPitchState() {
     win = [];
     hzDisp = null;
     ratioDisp = null;
@@ -1042,7 +1045,7 @@ try {
     }
   };
 
-  function drawResultsTrace(canvas: HTMLCanvasElement, payload: any) {
+  function drawResultsTrace(canvas: HTMLCanvasElement, payload: any, ghost: GhostPack | null = null) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
@@ -1129,7 +1132,25 @@ try {
     }
     ctx.stroke();
 
-    ctx.strokeStyle = "rgba(96,165,250,.95)";
+    
+    // --- GHOST (previous attempt) ---
+    if (ghost && Array.isArray(ghost.trace) && ghost.trace.length > 2) {
+      const gTrace = ghost.trace as any[];
+      const gTMax = Math.max(...gTrace.map((p) => p.t_ms ?? 0), 1);
+
+      ctx.strokeStyle = "rgba(148,163,184,.45)"; // slate/gray ghost
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for (let i = 0; i < gTrace.length; i++) {
+        const x = x0 + ((gTrace[i].t_ms ?? 0) / gTMax) * (x1 - x0);
+        const y = yScale((gTrace[i].pitch_midi_x100 ?? 0) / 100);
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+
+ctx.strokeStyle = "rgba(96,165,250,.95)";
     ctx.lineWidth = 2;
     let sm: number | null = null;
     ctx.beginPath();
@@ -1149,7 +1170,7 @@ try {
     ctx.fillText(String(yMin.toFixed(1)), 8, y1);
   }
 
-  function renderResults(payload: any) {
+  function renderResults(payload: any, ghost: GhostPack | null = null) {
     const steps: StepMetric[] = payload.steps ?? [];
     resultsWrap.style.display = "block";
 
@@ -1188,7 +1209,7 @@ try {
     }).join("");
 
     resultsTable.innerHTML = head + rows;
-    drawResultsTrace(resultsCanvas, payload);
+    drawResultsTrace(resultsCanvas, payload, ghost);
   }
 
   function exStartStep(stepIndex: number) {
@@ -1276,7 +1297,10 @@ try {
       stop_reason: reason,
     };
 
-    lastExercisePayload = payload;
+    // ghost overlay: load previous attempt BEFORE overwriting it
+    const ghostPrev = loadGhostPack(payload.exercise_id);
+    ghostPrevForResults = (ghostPrev && isGhostCompatible(ghostPrev, payload)) ? ghostPrev : null;
+lastExercisePayload = payload;
     lastExerciseTitle = exDef?.title?.[LANG] ?? payload.exercise_id;
     lastExerciseFinishedAt = new Date();
 
@@ -1290,8 +1314,11 @@ try {
       setHint(`${t("save_error")}: ${String(e)}`, 7000);
     }
 
-    renderResults(payload);
-    resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    renderResults(payload, ghostPrevForResults);
+    
+    // store current attempt as next ghost
+    saveGhostPack(payload.exercise_id, payload);
+resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
 
     running = false;
     engine.stopMic();
