@@ -32,11 +32,10 @@ document.documentElement.lang = LANG;
 
 const I18N: Record<Lang, Record<string, string>> = {
   ru: {
-    tab_train: "Тренировка",
-    tab_settings: "Настройки",
-    settings_title: "Настройки",
-    language: "Язык",
     theme: "Тема",
+    settings: "Настройки",
+    close: "Закрыть",
+    language: "Язык",
     target_note: "Целевая нота",
     mode: "Режим",
     assist: "ASSIST",
@@ -50,12 +49,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     exercises_reps: "Упражнения: транспозиции (reps)",
     ref_volume: "Громкость эталона",
     mic_sens: "Чувствительность микрофона",
-    ex_start: "START",
-    ex_stop: "STOP",
+    start: "START",
+    stop: "STOP",
     results_title: "Результат упражнения",
-    copy: "COPY",
-    download: "DOWNLOAD",
-    share: "SHARE",
     col_step: "Шаг",
     col_note: "Нота",
     col_t2g: "Взятие ноты (ms)",
@@ -63,17 +59,16 @@ const I18N: Record<Lang, Record<string, string>> = {
     col_green_pct: "% зелёной зоны",
     col_med: "Медиана |cents|",
     col_p95: "P95 |cents|",
-    col_corr: "Коррекции (пересечения)",
+    col_corr: "Коррекции",
     col_drift: "Дрейф (cents/s)",
     saved: "Сохранено",
     save_error: "Ошибка сохранения",
   },
   en: {
-    tab_train: "Training",
-    tab_settings: "Settings",
-    settings_title: "Settings",
-    language: "Language",
     theme: "Theme",
+    settings: "Settings",
+    close: "Close",
+    language: "Language",
     target_note: "Target note",
     mode: "Mode",
     assist: "ASSIST",
@@ -87,12 +82,9 @@ const I18N: Record<Lang, Record<string, string>> = {
     exercises_reps: "Exercises: transpositions (reps)",
     ref_volume: "Ref volume",
     mic_sens: "Mic sensitivity",
-    ex_start: "START",
-    ex_stop: "STOP",
+    start: "START",
+    stop: "STOP",
     results_title: "Exercise result",
-    copy: "COPY",
-    download: "DOWNLOAD",
-    share: "SHARE",
     col_step: "Step",
     col_note: "Note",
     col_t2g: "Time-to-green (ms)",
@@ -100,13 +92,12 @@ const I18N: Record<Lang, Record<string, string>> = {
     col_green_pct: "% in green",
     col_med: "Median |cents|",
     col_p95: "P95 |cents|",
-    col_corr: "Corrections (crossings)",
+    col_corr: "Corrections",
     col_drift: "Drift (cents/s)",
     saved: "Saved",
     save_error: "Save error",
   },
 };
-
 const t = (k: string) => I18N[LANG][k] ?? k;
 
 /** utils */
@@ -141,7 +132,6 @@ function hzToMidi(hz: number) {
   return 69 + 12 * Math.log2(hz / 440);
 }
 function formatDt(dt: Date) {
-  // dd.mm.yyyy hh:mm (ru) / locale (en)
   const loc = LANG === "ru" ? "ru-RU" : "en-US";
   return new Intl.DateTimeFormat(loc, {
     year: "numeric",
@@ -153,14 +143,11 @@ function formatDt(dt: Date) {
 }
 function slopeCentsPerS(series: Array<{ t: number; cents: number }>): number | null {
   if (series.length < 3) return null;
-
   const ts = series.map((p) => p.t / 1000);
   const cs = series.map((p) => p.cents);
   const n = series.length;
-
   const tMean = ts.reduce((a, b) => a + b, 0) / n;
   const cMean = cs.reduce((a, b) => a + b, 0) / n;
-
   let num = 0;
   let den = 0;
   for (let i = 0; i < n; i++) {
@@ -176,10 +163,8 @@ function slopeCentsPerS(series: Array<{ t: number; cents: number }>): number | n
 let AUTH_TOKEN: string | null = localStorage.getItem("vtp_token");
 async function ensureAuthToken() {
   if (AUTH_TOKEN) return AUTH_TOKEN;
-
   const urls = ["/api/auth/anonymous", "/auth/anonymous"];
   let lastErr: any = null;
-
   for (const u of urls) {
     try {
       const r = await fetch(u, { method: "POST" });
@@ -197,14 +182,12 @@ async function ensureAuthToken() {
   }
   throw new Error(`Cannot create anonymous user token: ${String(lastErr)}`);
 }
-
 async function postJson(url: string, data: any) {
   if (!AUTH_TOKEN) {
     try {
       await ensureAuthToken();
     } catch {}
   }
-
   return fetch(url, {
     method: "POST",
     headers: {
@@ -214,11 +197,9 @@ async function postJson(url: string, data: any) {
     body: JSON.stringify(data),
   });
 }
-
 async function saveAttempt(payload: any) {
   const urls = ["/api/training/attempts", "/training/attempts"];
   let lastErr: any = null;
-
   for (const u of urls) {
     try {
       const r = await postJson(u, payload);
@@ -230,11 +211,9 @@ async function saveAttempt(payload: any) {
   }
   throw new Error(`Save failed: ${String(lastErr)}`);
 }
-
 async function saveExerciseAttempt(payload: any) {
   const urls = ["/api/exercise_attempts", "/exercise_attempts"];
   let lastErr: any = null;
-
   for (const u of urls) {
     try {
       const r = await postJson(u, payload);
@@ -260,7 +239,6 @@ function applyTheme(t0: "dark" | "light") {
 /** Notes */
 const NOTE_NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
 const NOTE_RU: Record<string, string> = { C: "До", D: "Ре", E: "Ми", F: "Фа", G: "Соль", A: "Ля", B: "Си" };
-
 function midiToNote(midi: number) {
   const name = NOTE_NAMES[midi % 12];
   const octave = Math.floor(midi / 12) - 1;
@@ -283,7 +261,6 @@ function ensureDefaults() {
   setIfNull("vtp_ringMode", "live");
   setIfNull("vtp_trainMode", "assist");
   setIfNull("vtp_tolPct", "1.5");
-
   setIfNull("vtp_lang", LANG);
 
   const rv = Number(localStorage.getItem("vtp_refVol"));
@@ -292,6 +269,7 @@ function ensureDefaults() {
   const ms = Number(localStorage.getItem("vtp_micSens"));
   if (!Number.isFinite(ms) || ms <= 0) localStorage.setItem("vtp_micSens", "120");
 
+  // root note (user chosen) stored in vtp_targetMidi as before
   const userSet = localStorage.getItem("vtp_targetUserSet");
   const cur = Number(localStorage.getItem("vtp_targetMidi"));
   if (!userSet) {
@@ -328,6 +306,9 @@ const ICONS = {
   play: `<svg class="ico" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`,
   stop: `<svg class="ico" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`,
   gear: `<svg class="ico" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
+  copy: `<svg class="ico" viewBox="0 0 24 24"><path d="M16 1H6a2 2 0 0 0-2 2v10h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H10V7h9v14Z"/></svg>`,
+  download: `<svg class="ico" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2Zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1Z"/></svg>`,
+  share: `<svg class="ico" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a2.5 2.5 0 0 0 0-1.39l7-4.11A2.99 2.99 0 1 0 14 5a2.9 2.9 0 0 0 .04.49l-7 4.11a3 3 0 1 0 0 4.8l7.12 4.17c-.03.16-.05.32-.05.49a3 3 0 1 0 3-3Z"/></svg>`,
 };
 
 try {
@@ -356,8 +337,12 @@ try {
 
   let tolPct = clamp(loadNum("vtp_tolPct", 1.5), 0.5, 3.0);
 
-  let targetMidi = Number(localStorage.getItem("vtp_targetMidi") ?? "60");
-  if (!Number.isFinite(targetMidi)) targetMidi = 60;
+  // IMPORTANT: rootMidiUser is the note chosen by user (persisted).
+  let rootMidiUser = Number(localStorage.getItem("vtp_targetMidi") ?? "60");
+  if (!Number.isFinite(rootMidiUser)) rootMidiUser = 60;
+
+  // runtime target (changes during exercise, NOT persisted)
+  let targetMidi = rootMidiUser;
   let targetHz = midiToHz(targetMidi);
 
   // constants
@@ -369,10 +354,9 @@ try {
 
   const CLARITY_ON = 0.72;
   const CLARITY_OFF = 0.62;
-
   const RMS_MIN = 0.006;
 
-  // SNR / noise-floor
+  // SNR/noise-floor
   const NOISE_RMS_INIT = 0.003;
   const NOISE_ALPHA_UP = 0.002;
   const NOISE_ALPHA_DOWN = 0.06;
@@ -440,7 +424,7 @@ try {
   const EQ_N = 18;
   let eqVals = Array(EQ_N).fill(0);
 
-  // Exercise Runner (Flow)
+  // Exercise (Flow)
   type StepMetric = {
     step_index: number;
     target_midi: number;
@@ -483,12 +467,10 @@ try {
   let exTransposeCount = loadNum("vtp_exTransposeCount", EXERCISES[0].defaultTransposeCount);
   let exTransposeStep = loadNum("vtp_exTransposeStep", EXERCISES[0].defaultTransposeStep);
 
-  // step accumulators
   let exGreenConfirmMs = 0;
   let exTimeToGreenMs: number | null = null;
   let exTimeInGreenMs = 0;
 
-  // store BOTH: whole-step and stable-after-capture
   let exAbsCentsStepAll: number[] = [];
   let exAbsCentsStepStable: number[] = [];
   let exAbsCentsAllExercise: number[] = [];
@@ -514,151 +496,21 @@ try {
     exGreenConfirmMs = 0;
     exTimeToGreenMs = null;
     exTimeInGreenMs = 0;
-
     exAbsCentsStepAll = [];
     exAbsCentsStepStable = [];
-
     exClaritySum = 0;
     exRmsSum = 0;
     exFrames = 0;
-
     exOvershootMax = 0;
     exCorrectionCount = 0;
     exPrevSign = null;
-
     exDriftSeries = [];
   }
 
-  function exStartStep(stepIndex: number) {
-    exStepIdx = stepIndex;
-    exStepStartedAt = nowMs();
-    exResetStepAccumulators();
-
-    const midi = exTargets[exStepIdx];
-    setTargetMidi(midi, false);
-
-    resetPitchState();
-
-    applyAudioSettings();
-
-    // FIX #1: Assist = continuous reference that retunes every step
-    if (trainMode === "assist") {
-      engine.startReference(targetHz); // if already playing -> retune, no gaps
-    } else {
-      engine.playReference(targetHz, 0.55);
-    }
-
-    setHint(`${exDef?.title[LANG] ?? ""} • ${exStepIdx + 1}/${exTargets.length}`, 900);
-  }
-
-  function exFinalizeStep(): StepMetric {
-    const stepDur = nowMs() - exStepStartedAt;
-
-    // prefer stable segment; fallback to full step if not captured
-    const arr = exAbsCentsStepStable.length ? exAbsCentsStepStable : exAbsCentsStepAll;
-    const medAbs = median(arr);
-    const p95Abs = p95(arr);
-
-    const pctGreen = stepDur > 0 ? (100 * exTimeInGreenMs) / stepDur : 0;
-    const drift = slopeCentsPerS(exDriftSeries);
-
-    return {
-      step_index: exStepIdx,
-      target_midi: exTargets[exStepIdx],
-
-      time_to_green_ms: exTimeToGreenMs,
-      time_in_green_ms: exTimeInGreenMs,
-      pct_in_green: clamp(pctGreen, 0, 100),
-
-      median_abs_cents: medAbs,
-      p95_abs_cents: p95Abs,
-
-      overshoot_max_cents: exTimeToGreenMs === null ? null : exOvershootMax,
-      drift_cents_per_s: drift,
-      correction_count: exCorrectionCount,
-
-      clarity_mean: exFrames ? exClaritySum / exFrames : null,
-      rms_mean: exFrames ? exRmsSum / exFrames : null,
-    };
-  }
-
-  // Results UI state
+  // Results state
   let lastExercisePayload: any = null;
   let lastExerciseTitle = "";
   let lastExerciseFinishedAt: Date | null = null;
-
-  async function exFinish(reason: string) {
-    const totalTime = nowMs() - exStartedAt;
-    exActive = false;
-
-    // stop continuous ref after exercise
-    if (engine.isReferencePlaying()) engine.stopReference();
-
-    const steps = exSteps.slice();
-    const t2g = steps.map((s) => s.time_to_green_ms).filter((x): x is number => x !== null);
-
-    const p95AbsAll = p95(exAbsCentsAllExercise);
-    const avgAbsAll = mean(exAbsCentsAllExercise);
-
-    // score MVP (ok for now)
-    const scoreTotal = (() => {
-      let scoreSum = 0;
-      let n = 0;
-
-      for (const s of steps) {
-        const holdScore = clamp((s.time_in_green_ms ?? 0) / Math.max(1, exHoldMs), 0, 1);
-        const acc = s.median_abs_cents === null ? 0 : clamp(1 - s.median_abs_cents / 50, 0, 1);
-        const speed = s.time_to_green_ms === null ? 0 : clamp(1 - s.time_to_green_ms / Math.max(600, exMaxStepMs * 0.6), 0, 1);
-        const stepScore = 100 * (0.5 * holdScore + 0.3 * acc + 0.2 * speed);
-
-        scoreSum += stepScore;
-        n += 1;
-      }
-      return n ? scoreSum / n : 0;
-    })();
-
-    const payload = {
-      exercise_id: exDef?.id ?? "unknown",
-      mode: trainMode,
-      timing_mode: "flow",
-
-      total_time_ms: Math.round(totalTime),
-      score_total: Math.round(scoreTotal * 10) / 10,
-
-      avg_time_to_green_ms: t2g.length ? t2g.reduce((a, b) => a + b, 0) / t2g.length : null,
-      p95_time_to_green_ms: t2g.length ? p95(t2g) : null,
-
-      avg_abs_cents: avgAbsAll,
-      p95_abs_cents: p95AbsAll,
-
-      steps,
-      trace: exTrace,
-      stop_reason: reason,
-    };
-
-    lastExercisePayload = payload;
-    lastExerciseTitle = exDef?.title[LANG] ?? payload.exercise_id;
-    lastExerciseFinishedAt = new Date();
-
-    badgeSave.textContent = "Save: saving…";
-    try {
-      const res = await saveExerciseAttempt(payload);
-      badgeSave.textContent = `Save: id=${res.id}`;
-      setHint(`${t("saved")}: ${lastExerciseTitle}`, 2200);
-    } catch (e) {
-      badgeSave.textContent = "Save: error";
-      setHint(`${t("save_error")}: ${String(e)}`, 7000);
-    }
-
-    renderResults();
-  }
-
-  function buildShareText() {
-    const dt = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt) : "";
-    const score = lastExercisePayload?.score_total ?? "—";
-    const timeS = lastExercisePayload?.total_time_ms ? Math.round(lastExercisePayload.total_time_ms / 1000) : "—";
-    return `${lastExerciseTitle}. ${dt}\nscore: ${score}%\ntime: ${timeS}s`;
-  }
 
   // UI
   const refVol0 = loadNum("vtp_refVol", 45);
@@ -667,117 +519,119 @@ try {
   app.innerHTML = `
   <div class="container">
 
-    <div id="viewTrain" class="view active">
-
-      <div class="card">
-        <div class="header">
-          <div>
-            <div class="brand">Voice Trainer Pro</div>
-            <div class="subtle">Tuner • Exercises (Flow)</div>
-          </div>
-          <div class="badges">
-            <span class="badge" id="badgeState">Status: idle</span>
-            <span class="badge" id="badgeSave">Save: —</span>
-          </div>
+    <div class="card">
+      <div class="header">
+        <div>
+          <div class="brand">Voice Trainer Pro</div>
+          <div class="subtle" id="subTitle">—</div>
         </div>
 
-        <div class="controls">
-          <button class="iconBtn primary" id="btnMic">${ICONS.mic}<span class="lbl">MIC</span></button>
-          <button class="iconBtn" id="btnRef">${ICONS.spk}<span class="lbl">REF</span></button>
-          <button class="iconBtn" id="btnTry">${ICONS.dot}<span class="lbl">TRY</span></button>
-        </div>
+        <div class="badges" style="display:flex; gap:10px; align-items:center">
+          <span class="badge" id="badgeState">Status: idle</span>
+          <span class="badge" id="badgeSave">Save: —</span>
 
-        <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-          <select class="btnLike" id="selExercise" style="min-width:280px"></select>
-          <button class="iconBtn" id="btnExStart">${ICONS.play}<span class="lbl">${t("ex_start")}</span></button>
-          <button class="iconBtn" id="btnExStop">${ICONS.stop}<span class="lbl">${t("ex_stop")}</span></button>
-          <div style="flex:1"></div>
-          <div class="small" id="exMeta" style="min-width:260px;text-align:right;opacity:.85"></div>
-        </div>
-
-        <div class="stateLine" id="stateLine">—</div>
-
-        <div class="grid">
-          <div class="ringWrap">
-            <div class="ring" id="ringBox">
-              <svg viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.06)" stroke-width="5" fill="none"/>
-                <circle id="ringErr" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.10)" stroke-width="5"
-                  stroke-linecap="round" fill="none"
-                  stroke-dasharray="289.03" stroke-dashoffset="289.03"
-                  transform="rotate(-90 50 50)"/>
-
-                <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,.10)" stroke-width="9" fill="none"/>
-                <circle id="ringProg" cx="50" cy="50" r="42" stroke="rgba(52,211,153,.95)" stroke-width="9"
-                  stroke-linecap="round" fill="none"
-                  stroke-dasharray="263.89" stroke-dashoffset="263.89"
-                  transform="rotate(-90 50 50)"/>
-              </svg>
-
-              <div class="ringContent">
-                <div class="noteRu" id="noteRu">До</div>
-                <div class="noteBig" id="noteBig">C4</div>
-                <div class="hzBig" id="hzBig">— Hz</div>
-                <div class="delta" id="delta">—%</div>
-              </div>
-            </div>
-
-            <div class="tip" id="tipPhones" style="display:none">
-              Assist: рекомендованы наушники (иначе микрофон может “слышать” эталон).
-            </div>
-          </div>
-
-          <div>
-            <div class="targetLine" id="targetLine">—</div>
-            <div class="hint" id="hint">—</div>
-
-            <div class="eqWrap">
-              <div class="eq" id="eq"></div>
-              <div class="small" style="margin-top:10px">Input spectrum</div>
-            </div>
-
-            <div class="tunerWrap">
-              <div class="tunerBar">
-                <div class="tunerCenter"></div>
-                <div class="marker" id="marker"></div>
-              </div>
-              <div class="tunerMeta"><span>-100c</span><span>0</span><span>+100c</span></div>
-            </div>
-          </div>
+          <button class="iconBtn mini" id="btnTopLang"><span class="lbl">${LANG.toUpperCase()}</span></button>
+          <button class="iconBtn mini" id="btnTopTheme">${ICONS.dot}<span class="lbl">${t("theme")}</span></button>
+          <button class="iconBtn mini" id="btnTopSettings">${ICONS.gear}<span class="lbl">${t("settings")}</span></button>
         </div>
       </div>
 
-      <div class="card resultsWrap" id="resultsWrap">
-        <div class="header">
-          <div>
-            <div class="brand" id="resultsTitle">${t("results_title")}</div>
-            <div class="resultsMeta" id="resultsMeta"></div>
-          </div>
-          <div class="resultsActions">
-            <button class="iconBtn" id="btnResCopy"><span class="lbl">${t("copy")}</span></button>
-            <button class="iconBtn" id="btnResDownload"><span class="lbl">${t("download")}</span></button>
-            <button class="iconBtn" id="btnResShare"><span class="lbl">${t("share")}</span></button>
-          </div>
-        </div>
-
-        <div style="margin-top:10px">
-          <canvas id="resultsCanvas" class="resultsCanvas" width="980" height="260"></canvas>
-        </div>
-
-        <div class="hr"></div>
-
-        <div style="overflow:auto">
-          <table class="resultsTable" id="resultsTable"></table>
-        </div>
+      <div class="controls">
+        <button class="iconBtn primary" id="btnMic">${ICONS.mic}<span class="lbl">MIC</span></button>
+        <button class="iconBtn" id="btnRef">${ICONS.spk}<span class="lbl">REF</span></button>
+        <button class="iconBtn" id="btnTry">${ICONS.dot}<span class="lbl">TRY</span></button>
       </div>
 
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
+        <select class="btnLike" id="selExercise" style="min-width:280px"></select>
+        <button class="iconBtn" id="btnExStart">${ICONS.play}<span class="lbl">${t("start")}</span></button>
+        <button class="iconBtn" id="btnExStop">${ICONS.stop}<span class="lbl">${t("stop")}</span></button>
+        <div style="flex:1"></div>
+        <div class="small" id="exMeta" style="min-width:260px;text-align:right;opacity:.85"></div>
+      </div>
+
+      <div class="stateLine" id="stateLine">—</div>
+
+      <div class="grid">
+        <div class="ringWrap">
+          <div class="ring" id="ringBox">
+            <svg viewBox="0 0 100 100">
+              <circle cx="50" cy="50" r="46" stroke="rgba(255,255,255,.06)" stroke-width="5" fill="none"/>
+              <circle id="ringErr" cx="50" cy="50" r="46" stroke="rgba(255,255,255,.10)" stroke-width="5"
+                stroke-linecap="round" fill="none"
+                stroke-dasharray="289.03" stroke-dashoffset="289.03"
+                transform="rotate(-90 50 50)"/>
+
+              <circle cx="50" cy="50" r="42" stroke="rgba(255,255,255,.10)" stroke-width="9" fill="none"/>
+              <circle id="ringProg" cx="50" cy="50" r="42" stroke="rgba(52,211,153,.95)" stroke-width="9"
+                stroke-linecap="round" fill="none"
+                stroke-dasharray="263.89" stroke-dashoffset="263.89"
+                transform="rotate(-90 50 50)"/>
+            </svg>
+
+            <div class="ringContent">
+              <div class="noteRu" id="noteRu">До</div>
+              <div class="noteBig" id="noteBig">C4</div>
+              <div class="hzBig" id="hzBig">— Hz</div>
+              <div class="delta" id="delta">—%</div>
+            </div>
+          </div>
+
+          <div class="tip" id="tipPhones" style="display:none">
+            Assist: рекомендованы наушники (иначе микрофон может “слышать” эталон).
+          </div>
+        </div>
+
+        <div>
+          <div class="targetHzBig" id="targetHzBig">— Hz</div>
+          <div class="targetLine" id="targetLine">—</div>
+          <div class="hint" id="hint">—</div>
+
+          <div class="eqWrap">
+            <div class="eq" id="eq"></div>
+            <div class="small" style="margin-top:10px">Input spectrum</div>
+          </div>
+
+          <div class="tunerWrap">
+            <div class="tunerBar">
+              <div class="tunerCenter"></div>
+              <div class="marker" id="marker"></div>
+            </div>
+            <div class="tunerMeta"><span>-100c</span><span>0</span><span>+100c</span></div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div id="viewSettings" class="view">
-      <div class="card">
-        <div class="header">
-          <div class="brand">${t("settings_title")}</div>
-          <button class="iconBtn" id="btnTheme">${ICONS.gear}<span class="lbl">${t("theme")}</span></button>
+    <div class="card resultsWrap" id="resultsWrap">
+      <div class="header">
+        <div>
+          <div class="brand" id="resultsTitle">${t("results_title")}</div>
+          <div class="resultsMeta" id="resultsMeta"></div>
+        </div>
+        <div class="resultsActions">
+          <button class="iconBtn mini" id="btnResCopy">${ICONS.copy}<span class="lbl">copy</span></button>
+          <button class="iconBtn mini" id="btnResDownload">${ICONS.download}<span class="lbl">download</span></button>
+          <button class="iconBtn mini" id="btnResShare">${ICONS.share}<span class="lbl">share</span></button>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <canvas id="resultsCanvas" class="resultsCanvas" width="980" height="260"></canvas>
+      </div>
+
+      <div class="hr"></div>
+
+      <div style="overflow:auto">
+        <table class="resultsTable" id="resultsTable"></table>
+      </div>
+    </div>
+
+    <div class="modalBackdrop" id="settingsModal">
+      <div class="card modalCard">
+        <div class="modalHeader">
+          <div class="brand">${t("settings")}</div>
+          <button class="iconBtn" id="btnSettingsClose">${ICONS.stop}<span class="lbl">${t("close")}</span></button>
         </div>
 
         <div class="hr"></div>
@@ -853,13 +707,6 @@ try {
       </div>
     </div>
 
-    <div class="tabbar">
-      <div class="tabbarInner">
-        <button class="tab active" id="tabTrain">${ICONS.dot}<span>${t("tab_train")}</span></button>
-        <button class="tab" id="tabSettings">${ICONS.gear}<span>${t("tab_settings")}</span></button>
-      </div>
-    </div>
-
   </div>
   `;
 
@@ -869,23 +716,14 @@ try {
     return el as T;
   };
 
-  // views/tabs
-  const viewTrain = q<HTMLDivElement>("#viewTrain");
-  const viewSettings = q<HTMLDivElement>("#viewSettings");
-  const tabTrain = q<HTMLButtonElement>("#tabTrain");
-  const tabSettings = q<HTMLButtonElement>("#tabSettings");
+  const subTitle = q<HTMLDivElement>("#subTitle");
+  const btnTopLang = q<HTMLButtonElement>("#btnTopLang");
+  const btnTopTheme = q<HTMLButtonElement>("#btnTopTheme");
+  const btnTopSettings = q<HTMLButtonElement>("#btnTopSettings");
 
-  const showView = (name: "train" | "settings") => {
-    const train = name === "train";
-    viewTrain.classList.toggle("active", train);
-    viewSettings.classList.toggle("active", !train);
-    tabTrain.classList.toggle("active", train);
-    tabSettings.classList.toggle("active", !train);
-  };
-  tabTrain.onclick = () => showView("train");
-  tabSettings.onclick = () => showView("settings");
+  const badgeState = q<HTMLSpanElement>("#badgeState");
+  const badgeSave = q<HTMLSpanElement>("#badgeSave");
 
-  // refs
   const btnMic = q<HTMLButtonElement>("#btnMic");
   const btnRef = q<HTMLButtonElement>("#btnRef");
   const btnTry = q<HTMLButtonElement>("#btnTry");
@@ -895,8 +733,6 @@ try {
   const btnExStop = q<HTMLButtonElement>("#btnExStop");
   const exMeta = q<HTMLDivElement>("#exMeta");
 
-  const badgeState = q<HTMLSpanElement>("#badgeState");
-  const badgeSave = q<HTMLSpanElement>("#badgeSave");
   const stateLine = q<HTMLDivElement>("#stateLine");
 
   const ringBox = q<HTMLDivElement>("#ringBox");
@@ -908,6 +744,7 @@ try {
   const hzBig = q<HTMLDivElement>("#hzBig");
   const delta = q<HTMLDivElement>("#delta");
 
+  const targetHzBig = q<HTMLDivElement>("#targetHzBig");
   const targetLine = q<HTMLDivElement>("#targetLine");
   hintEl = q<HTMLDivElement>("#hint");
   const tipPhones = q<HTMLDivElement>("#tipPhones");
@@ -924,9 +761,10 @@ try {
   const btnResDownload = q<HTMLButtonElement>("#btnResDownload");
   const btnResShare = q<HTMLButtonElement>("#btnResShare");
 
-  // settings refs
-  const btnTheme = q<HTMLButtonElement>("#btnTheme");
+  const settingsModal = q<HTMLDivElement>("#settingsModal");
+  const btnSettingsClose = q<HTMLButtonElement>("#btnSettingsClose");
   const selLang = q<HTMLSelectElement>("#selLang");
+
   const selNote = q<HTMLSelectElement>("#selNote");
   const selOct = q<HTMLSelectElement>("#selOct");
   const btnPlayTarget = q<HTMLButtonElement>("#btnPlayTarget");
@@ -943,10 +781,8 @@ try {
 
   const exHoldSlider = q<HTMLInputElement>("#exHoldMs");
   const exHoldMeta = q<HTMLDivElement>("#exHoldMeta");
-
   const exMaxStepSlider = q<HTMLInputElement>("#exMaxStepMs");
   const exMaxStepMeta = q<HTMLDivElement>("#exMaxStepMeta");
-
   const exTrCountSlider = q<HTMLInputElement>("#exTrCount");
   const exTrMeta = q<HTMLDivElement>("#exTrMeta");
 
@@ -954,13 +790,36 @@ try {
   const micSens = q<HTMLInputElement>("#micSens");
   const micMeta = q<HTMLDivElement>("#micMeta");
 
-  // theme
-  btnTheme.onclick = () => {
-    const t0 = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
-    applyTheme(t0);
+  // modal open/close
+  const openSettings = () => {
+    settingsModal.style.display = "block";
+    selLang.value = LANG;
+  };
+  const closeSettings = () => {
+    settingsModal.style.display = "none";
   };
 
-  // language
+  btnTopSettings.onclick = openSettings;
+  btnSettingsClose.onclick = closeSettings;
+  settingsModal.addEventListener("click", (e) => {
+    if (e.target === settingsModal) closeSettings();
+  });
+
+  // top buttons
+  btnTopLang.onclick = () => {
+    const v = LANG === "ru" ? "en" : "ru";
+    localStorage.setItem("vtp_lang", v);
+    location.reload();
+  };
+  btnTopTheme.onclick = () => {
+    const t0 = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
+    applyTheme(t0);
+    // redraw chart labels for theme change
+    if (lastExercisePayload) renderResults();
+  };
+  btnTopSettings.onclick = openSettings;
+
+  // language dropdown
   selLang.value = LANG;
   selLang.onchange = () => {
     const v = selLang.value === "en" ? "en" : "ru";
@@ -988,6 +847,7 @@ try {
     tolPct = clamp(Number(tolPctSlider.value), 0.5, 3.0);
     localStorage.setItem("vtp_tolPct", String(tolPct));
     tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
+    if (lastExercisePayload) renderResults();
   };
 
   // exercise sliders
@@ -1067,23 +927,34 @@ try {
   selNote.innerHTML = NOTE_NAMES.map((n) => `<option value="${n}">${n}</option>`).join("");
   selOct.innerHTML = OCT.map((o) => `<option value="${o}">${o}</option>`).join("");
 
-  const setTargetMidi = (m: number, userSet = true) => {
+  // runtime target setter (NO localStorage writes)
+  const setRuntimeTargetMidi = (m: number) => {
     targetMidi = m;
     targetHz = midiToHz(targetMidi);
-    saveNum("vtp_targetMidi", targetMidi);
-    if (userSet) localStorage.setItem("vtp_targetUserSet", "1");
 
     const n = midiToNote(targetMidi);
     noteRu.textContent = n.ru;
     noteBig.textContent = `${n.name}${n.octave}`;
+  };
+
+  // user root setter (persists)
+  const setUserRootMidi = (m: number) => {
+    rootMidiUser = m;
+    localStorage.setItem("vtp_targetMidi", String(rootMidiUser));
+    localStorage.setItem("vtp_targetUserSet", "1");
+    setRuntimeTargetMidi(rootMidiUser);
+
+    const n = midiToNote(rootMidiUser);
     selNote.value = n.name;
     selOct.value = String(n.octave);
-    noteMeta.textContent = `${n.ru} (${n.name}${n.octave}) ${targetHz.toFixed(1)} Hz`;
+    noteMeta.textContent = `${n.ru} (${n.name}${n.octave}) ${midiToHz(rootMidiUser).toFixed(1)} Hz`;
   };
-  setTargetMidi(targetMidi, false);
 
-  selNote.onchange = () => setTargetMidi(noteOctToMidi(selNote.value, Number(selOct.value)), true);
-  selOct.onchange = () => setTargetMidi(noteOctToMidi(selNote.value, Number(selOct.value)), true);
+  // init from stored root
+  setUserRootMidi(rootMidiUser);
+
+  selNote.onchange = () => setUserRootMidi(noteOctToMidi(selNote.value, Number(selOct.value)));
+  selOct.onchange = () => setUserRootMidi(noteOctToMidi(selNote.value, Number(selOct.value)));
 
   bindUserGesture(btnPlayTarget, () => {
     applyAudioSettings();
@@ -1097,7 +968,8 @@ try {
 
   function renderExMeta() {
     const ex = getExerciseById(selExercise.value);
-    const totalSteps = buildFlowTargets(ex, targetMidi, Math.round(exTransposeCount), Math.round(exTransposeStep)).length;
+    // IMPORTANT: use rootMidiUser, not current runtime targetMidi
+    const totalSteps = buildFlowTargets(ex, rootMidiUser, Math.round(exTransposeCount), Math.round(exTransposeStep)).length;
     exMeta.textContent = `hold=${Math.round(exHoldMs)}ms • max=${Math.round(exMaxStepMs)}ms • steps=${totalSteps}`;
   }
   renderExMeta();
@@ -1106,7 +978,7 @@ try {
     renderExMeta();
   };
 
-  // visuals
+  // marker
   const setMarkerCents = (cents: number | null) => {
     if (cents === null) {
       marker.style.opacity = "0";
@@ -1119,6 +991,7 @@ try {
     marker.style.left = `${tt * 100}%`;
   };
 
+  // rings
   const setRing = (fill01: number, errFill01: number, errPct: number | null) => {
     const CIRC_IN = 263.89;
     const CIRC_OUT = 289.03;
@@ -1144,13 +1017,12 @@ try {
     }
   };
 
-  // results actions
+  // results action buttons
   btnResCopy.onclick = async () => {
     if (!lastExercisePayload) return;
     await navigator.clipboard.writeText(JSON.stringify(lastExercisePayload, null, 2));
     setHint("Copied.", 900);
   };
-
   btnResDownload.onclick = () => {
     if (!lastExercisePayload) return;
     const blob = new Blob([JSON.stringify(lastExercisePayload, null, 2)], { type: "application/json" });
@@ -1162,9 +1034,11 @@ try {
     a.click();
     URL.revokeObjectURL(url);
   };
-
   btnResShare.onclick = async () => {
-    const text = buildShareText();
+    const dt = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt) : "";
+    const score = lastExercisePayload?.score_total ?? "—";
+    const timeS = lastExercisePayload?.total_time_ms ? Math.round(lastExercisePayload.total_time_ms / 1000) : "—";
+    const text = `${lastExerciseTitle}. ${dt}\nscore: ${score}%\ntime: ${timeS}s`;
     // @ts-ignore
     if (navigator.share) {
       try {
@@ -1177,51 +1051,40 @@ try {
     }
   };
 
-  function drawResultsBars(canvas: HTMLCanvasElement, payload: any) {
+  function drawResultsTrace(canvas: HTMLCanvasElement, payload: any) {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     const trace: TracePoint[] = payload.trace ?? [];
-    const steps: StepMetric[] = payload.steps ?? [];
-    if (!steps.length) return;
+    if (!trace.length) return;
 
-    // per-step median pitch midi (from trace)
-    const perStep: Array<{ target: number; pitchMed: number | null }> = steps.map((s) => {
-      const pts = trace.filter((p) => p.step_index === s.step_index);
-      const arr = pts.map((p) => p.pitch_midi_x100 / 100);
-      const med = median(arr);
-      return { target: s.target_midi, pitchMed: med };
-    });
+    const theme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const grid = theme === "light" ? "rgba(15,23,42,.08)" : "rgba(255,255,255,.06)";
+    const label = theme === "light" ? "rgba(15,23,42,.60)" : "rgba(255,255,255,.60)";
+    const sep = theme === "light" ? "rgba(15,23,42,.10)" : "rgba(255,255,255,.08)";
 
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
 
+    const tMax = Math.max(...trace.map((p) => p.t_ms), 1);
+
     const yVals: number[] = [];
-    for (const p of perStep) {
-      yVals.push(p.target);
-      if (p.pitchMed !== null) yVals.push(p.pitchMed);
+    for (const p of trace) {
+      yVals.push(p.target_midi);
+      yVals.push(p.pitch_midi_x100 / 100);
     }
-    const yMin = Math.min(...yVals) - 1.2;
-    const yMax = Math.max(...yVals) + 1.2;
+    const yMin = Math.min(...yVals) - 1.0;
+    const yMax = Math.max(...yVals) + 1.0;
 
-    const padL = 42;
-    const padR = 14;
-    const padT = 14;
-    const padB = 22;
+    const padL = 42, padR = 14, padT = 14, padB = 22;
+    const x0 = padL, x1 = w - padR, y0 = padT, y1 = h - padB;
 
-    const x0 = padL;
-    const x1 = w - padR;
-    const y0 = padT;
-    const y1 = h - padB;
+    const xScale = (tms: number) => x0 + (tms / tMax) * (x1 - x0);
+    const yScale = (midi: number) => y0 + ((yMax - midi) / Math.max(1e-6, (yMax - yMin))) * (y1 - y0);
 
-    const n = perStep.length;
-    const colW = (x1 - x0) / Math.max(1, n);
-
-    const yScale = (midi: number) => y0 + ((yMax - midi) / Math.max(1e-6, yMax - yMin)) * (y1 - y0);
-
-    // grid lines
-    ctx.strokeStyle = "rgba(255,255,255,.06)";
+    // grid
+    ctx.strokeStyle = grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
       const yy = y0 + (i / 4) * (y1 - y0);
@@ -1231,43 +1094,68 @@ try {
       ctx.stroke();
     }
 
-    // green band: convert tolPct to cents => semitones
+    // green band around target
     const tolCents = 1200 * Math.log2(1 + tolPct / 100);
     const tolSemi = tolCents / 100;
 
-    for (let i = 0; i < n; i++) {
-      const { target } = perStep[i];
-      const cx = x0 + i * colW;
+    ctx.fillStyle = "rgba(52,211,153,.10)";
+    ctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      const x = xScale(trace[i].t_ms);
+      const y = yScale(trace[i].target_midi + tolSemi);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    for (let i = trace.length - 1; i >= 0; i--) {
+      const x = xScale(trace[i].t_ms);
+      const y = yScale(trace[i].target_midi - tolSemi);
+      ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
 
-      const yA = yScale(target + tolSemi);
-      const yB = yScale(target - tolSemi);
-
-      ctx.fillStyle = "rgba(52,211,153,.10)";
-      ctx.fillRect(cx + colW * 0.12, yA, colW * 0.76, yB - yA);
-
-      // target marker
-      const yt = yScale(target);
-      ctx.strokeStyle = "rgba(52,211,153,.70)";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.moveTo(cx + colW * 0.18, yt);
-      ctx.lineTo(cx + colW * 0.82, yt);
-      ctx.stroke();
-
-      // voice bar (median)
-      const pm = perStep[i].pitchMed;
-      if (pm !== null) {
-        const yp = yScale(pm);
-        const top = Math.min(yt, yp);
-        const height = Math.abs(yt - yp);
-
-        ctx.fillStyle = "rgba(96,165,250,.85)";
-        ctx.fillRect(cx + colW * 0.36, top, colW * 0.28, Math.max(2, height));
+    // step separators
+    ctx.strokeStyle = sep;
+    ctx.lineWidth = 1;
+    for (let i = 1; i < trace.length; i++) {
+      if (trace[i].step_index !== trace[i - 1].step_index) {
+        const x = xScale(trace[i].t_ms);
+        ctx.beginPath();
+        ctx.moveTo(x, y0);
+        ctx.lineTo(x, y1);
+        ctx.stroke();
       }
     }
 
+    // target line
+    ctx.strokeStyle = "rgba(52,211,153,.75)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      const x = xScale(trace[i].t_ms);
+      const y = yScale(trace[i].target_midi);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    // pitch line (EMA smoothed)
+    ctx.strokeStyle = "rgba(96,165,250,.95)";
+    ctx.lineWidth = 2;
+    let sm: number | null = null;
+    ctx.beginPath();
+    for (let i = 0; i < trace.length; i++) {
+      const x = xScale(trace[i].t_ms);
+      const raw = trace[i].pitch_midi_x100 / 100;
+      sm = sm === null ? raw : sm * 0.75 + raw * 0.25;
+      const y = yScale(sm);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
     // y labels
-    ctx.fillStyle = "rgba(255,255,255,.65)";
+    ctx.fillStyle = label;
     ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
     ctx.fillText(String(yMax.toFixed(1)), 8, y0 + 10);
     ctx.fillText(String(yMin.toFixed(1)), 8, y1);
@@ -1283,11 +1171,8 @@ try {
     const timeS = lastExercisePayload.total_time_ms ? Math.round(lastExercisePayload.total_time_ms / 1000) : "—";
     const avgT2g = lastExercisePayload.avg_time_to_green_ms ? Math.round(lastExercisePayload.avg_time_to_green_ms) : null;
 
-    resultsMeta.textContent =
-      `score: ${score}% • time: ${timeS}s` +
-      (avgT2g !== null ? ` • avg time-to-green: ${avgT2g}ms` : "");
+    resultsMeta.textContent = `score: ${score}% • time: ${timeS}s` + (avgT2g !== null ? ` • avg time-to-green: ${avgT2g}ms` : "");
 
-    // table
     const steps: StepMetric[] = lastExercisePayload.steps ?? [];
     const head = `
       <tr>
@@ -1302,37 +1187,141 @@ try {
         <th>${t("col_drift")}</th>
       </tr>
     `;
-
-    const rows = steps
-      .map((s) => {
-        const n = midiToNote(s.target_midi);
-        const noteLabel = `${n.name}${n.octave}`;
-        const t2g = s.time_to_green_ms === null ? "—" : String(Math.round(s.time_to_green_ms));
-        const drift = s.drift_cents_per_s === null ? "—" : s.drift_cents_per_s.toFixed(2);
-        const med = s.median_abs_cents === null ? "—" : s.median_abs_cents.toFixed(1);
-        const p = s.p95_abs_cents === null ? "—" : s.p95_abs_cents.toFixed(1);
-
-        return `
-          <tr>
-            <td class="smallMono">${s.step_index + 1}</td>
-            <td class="smallMono">${noteLabel}</td>
-            <td class="smallMono">${t2g}</td>
-            <td class="smallMono">${Math.round(s.time_in_green_ms)}</td>
-            <td class="smallMono">${s.pct_in_green.toFixed(0)}%</td>
-            <td class="smallMono">${med}</td>
-            <td class="smallMono">${p}</td>
-            <td class="smallMono">${s.correction_count}</td>
-            <td class="smallMono">${drift}</td>
-          </tr>
-        `;
-      })
-      .join("");
+    const rows = steps.map((s) => {
+      const n = midiToNote(s.target_midi);
+      const noteLabel = `${n.name}${n.octave}`;
+      const t2g = s.time_to_green_ms === null ? "—" : String(Math.round(s.time_to_green_ms));
+      const drift = s.drift_cents_per_s === null ? "—" : s.drift_cents_per_s.toFixed(2);
+      const med = s.median_abs_cents === null ? "—" : s.median_abs_cents.toFixed(1);
+      const p = s.p95_abs_cents === null ? "—" : s.p95_abs_cents.toFixed(1);
+      return `
+        <tr>
+          <td class="smallMono">${s.step_index + 1}</td>
+          <td class="smallMono">${noteLabel}</td>
+          <td class="smallMono">${t2g}</td>
+          <td class="smallMono">${Math.round(s.time_in_green_ms)}</td>
+          <td class="smallMono">${s.pct_in_green.toFixed(0)}%</td>
+          <td class="smallMono">${med}</td>
+          <td class="smallMono">${p}</td>
+          <td class="smallMono">${s.correction_count}</td>
+          <td class="smallMono">${drift}</td>
+        </tr>
+      `;
+    }).join("");
 
     resultsTable.innerHTML = head + rows;
+    drawResultsTrace(resultsCanvas, lastExercisePayload);
+  }
 
-    drawResultsBars(resultsCanvas, lastExercisePayload);
+  function exStartStep(stepIndex: number) {
+    exStepIdx = stepIndex;
+    exStepStartedAt = nowMs();
+    exResetStepAccumulators();
 
-    // scroll into view
+    const midi = exTargets[exStepIdx];
+    setRuntimeTargetMidi(midi);     // runtime only
+    resetPitchState();
+
+    applyAudioSettings();
+    if (trainMode === "assist") engine.startReference(targetHz);
+    else engine.playReference(targetHz, 0.55);
+
+    setHint(`${exDef?.title[LANG] ?? ""} • ${exStepIdx + 1}/${exTargets.length}`, 900);
+  }
+
+  function exFinalizeStep(): StepMetric {
+    const stepDur = nowMs() - exStepStartedAt;
+    const arr = exAbsCentsStepStable.length ? exAbsCentsStepStable : exAbsCentsStepAll;
+
+    const medAbs = median(arr);
+    const p95Abs = p95(arr);
+    const pctGreen = stepDur > 0 ? (100 * exTimeInGreenMs) / stepDur : 0;
+    const drift = slopeCentsPerS(exDriftSeries);
+
+    return {
+      step_index: exStepIdx,
+      target_midi: exTargets[exStepIdx],
+
+      time_to_green_ms: exTimeToGreenMs,
+      time_in_green_ms: exTimeInGreenMs,
+      pct_in_green: clamp(pctGreen, 0, 100),
+
+      median_abs_cents: medAbs,
+      p95_abs_cents: p95Abs,
+
+      overshoot_max_cents: exTimeToGreenMs === null ? null : exOvershootMax,
+      drift_cents_per_s: drift,
+      correction_count: exCorrectionCount,
+
+      clarity_mean: exFrames ? exClaritySum / exFrames : null,
+      rms_mean: exFrames ? exRmsSum / exFrames : null,
+    };
+  }
+
+  async function exFinish(reason: string) {
+    const totalTime = nowMs() - exStartedAt;
+    exActive = false;
+    if (engine.isReferencePlaying()) engine.stopReference();
+
+    // restore user's root note after exercise (fix drift bug)
+    setRuntimeTargetMidi(rootMidiUser);
+    resetPitchState();
+    renderExMeta();
+
+    const steps = exSteps.slice();
+    const t2g = steps.map((s) => s.time_to_green_ms).filter((x): x is number => x !== null);
+
+    const p95AbsAll = p95(exAbsCentsAllExercise);
+    const avgAbsAll = mean(exAbsCentsAllExercise);
+
+    const scoreTotal = (() => {
+      let scoreSum = 0;
+      let n = 0;
+      for (const s of steps) {
+        const holdScore = clamp((s.time_in_green_ms ?? 0) / Math.max(1, exHoldMs), 0, 1);
+        const acc = s.median_abs_cents === null ? 0 : clamp(1 - s.median_abs_cents / 50, 0, 1);
+        const speed = s.time_to_green_ms === null ? 0 : clamp(1 - s.time_to_green_ms / Math.max(600, exMaxStepMs * 0.6), 0, 1);
+        const stepScore = 100 * (0.5 * holdScore + 0.3 * acc + 0.2 * speed);
+        scoreSum += stepScore;
+        n += 1;
+      }
+      return n ? scoreSum / n : 0;
+    })();
+
+    const payload = {
+      exercise_id: exDef?.id ?? "unknown",
+      mode: trainMode,
+      timing_mode: "flow",
+
+      total_time_ms: Math.round(totalTime),
+      score_total: Math.round(scoreTotal * 10) / 10,
+
+      avg_time_to_green_ms: t2g.length ? t2g.reduce((a, b) => a + b, 0) / t2g.length : null,
+      p95_time_to_green_ms: t2g.length ? p95(t2g) : null,
+
+      avg_abs_cents: avgAbsAll,
+      p95_abs_cents: p95AbsAll,
+
+      steps,
+      trace: exTrace,
+      stop_reason: reason,
+    };
+
+    lastExercisePayload = payload;
+    lastExerciseTitle = exDef?.title[LANG] ?? payload.exercise_id;
+    lastExerciseFinishedAt = new Date();
+
+    badgeSave.textContent = "Save: saving…";
+    try {
+      const res = await saveExerciseAttempt(payload);
+      badgeSave.textContent = `Save: id=${res.id}`;
+      setHint(`${t("saved")}: ${lastExerciseTitle}`, 2200);
+    } catch (e) {
+      badgeSave.textContent = "Save: error";
+      setHint(`${t("save_error")}: ${String(e)}`, 7000);
+    }
+
+    renderResults();
     resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
@@ -1340,29 +1329,33 @@ try {
   eq.innerHTML = Array.from({ length: EQ_N }).map(() => "<span></span>").join("");
   const eqBars = Array.from(eq.querySelectorAll("span")) as HTMLSpanElement[];
 
-  // status update
   const updateUI = () => {
-    const n = midiToNote(targetMidi);
+    subTitle.textContent = `${trainMode.toUpperCase()} • ${ringMode.toUpperCase()} • ±${tolPct.toFixed(1)}%`;
+
+    btnMic.classList.toggle("on-mic", running && engine.isMicReady());
+    btnRef.classList.toggle("on-ref", engine.isReferencePlaying());
+
     tipPhones.style.display = trainMode === "assist" && engine.isReferencePlaying() ? "block" : "none";
 
     stateLine.textContent =
-      `MIC: ${running && engine.isMicReady() ? "on" : "off"} • ` +
-      `REF: ${engine.isReferencePlaying() ? "on" : "off"} • ` +
-      `MODE: ${trainMode.toUpperCase()} • ±${tolPct.toFixed(1)}%` +
+      `MIC: ${running && engine.isMicReady() ? "on" : "off"} • REF: ${engine.isReferencePlaying() ? "on" : "off"}` +
       (exActive && exDef ? ` • EX: ${exDef.id} ${exStepIdx + 1}/${exTargets.length}` : "");
 
     micMeta.textContent =
       `rms: ${lastFrame.rms.toFixed(3)} • clarity: ${(lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2)} • ` +
       `noise: ${noiseRms.toFixed(4)} • snr: ${snrDbDisp.toFixed(1)} dB • keep: ${energyKeepDisp ? "yes" : "no"}`;
 
+    targetHzBig.textContent = `${targetHz.toFixed(1)} Hz`;
+    const n = midiToNote(targetMidi);
+    targetLine.textContent = LANG === "ru" ? `Нота ${n.ru} (${n.name}${n.octave})` : `Note ${n.name}${n.octave}`;
+
     if (!running || !engine.isMicReady()) {
       badgeState.textContent = "Status: idle";
       hzBig.textContent = "— Hz";
       delta.textContent = "—%";
-      targetLine.textContent = `Нота ${n.ru} (${n.name}${n.octave}) • ${targetHz.toFixed(1)} Hz`;
       setMarkerCents(null);
       setRing(ringFill, ringErrFill, null);
-      if (nowMs() >= hintLockUntil) setHint("Нажмите MIC для микрофона.", 0);
+      if (nowMs() >= hintLockUntil) setHint(LANG === "ru" ? "Нажмите MIC, затем START упражнения." : "Press MIC, then START.", 0);
       return;
     }
 
@@ -1371,10 +1364,8 @@ try {
     if (hzDisp === null || ratioDisp === null) {
       hzBig.textContent = "— Hz";
       delta.textContent = "—%";
-      targetLine.textContent = `Нота ${n.ru} (${n.name}${n.octave}) • ${targetHz.toFixed(1)} Hz`;
       setMarkerCents(null);
       setRing(ringFill, ringErrFill, null);
-      if (nowMs() >= hintLockUntil) setHint("Нет стабильного тона. Пойте протяжнее.", 0);
       return;
     }
 
@@ -1383,13 +1374,11 @@ try {
 
     hzBig.textContent = `${hzDisp.toFixed(1)} Hz`;
     delta.textContent = `${pct.toFixed(1)}%`;
-    targetLine.textContent = `Нота ${n.ru} (${n.name}${n.octave}) • ${targetHz.toFixed(1)} Hz • Δ ${errPct.toFixed(2)}%`;
 
     setMarkerCents(centsHold);
     setRing(ringFill, ringErrFill, errPct);
   };
 
-  // sampling loop (core logic stays same as before, with exercise updates)
   const rafLoop = () => {
     if (!running) return;
 
@@ -1521,7 +1510,7 @@ try {
 
         lastStableAt = tNow;
 
-        // Exercise update (only when exActive)
+        // Exercise update
         if (exActive && exDef) {
           const realRecent = tNow - recentRealPitchAt <= 220;
           const inGreen = realRecent && Math.abs(medErrPct) <= tolPct;
@@ -1541,7 +1530,6 @@ try {
             const absC = Math.abs(medC);
             exAbsCentsStepAll.push(absC);
             exAbsCentsAllExercise.push(absC);
-
             if (exTimeToGreenMs !== null) exAbsCentsStepStable.push(absC);
 
             exClaritySum += fr.clarity;
@@ -1550,7 +1538,6 @@ try {
 
             if (exTimeToGreenMs === null) {
               exOvershootMax = Math.max(exOvershootMax, absC);
-
               const sign = (medC > 1e-3 ? 1 : medC < -1e-3 ? -1 : 0) as -1 | 0 | 1;
               if (sign !== 0) {
                 if (exPrevSign !== null && exPrevSign !== 0 && exPrevSign !== sign) exCorrectionCount += 1;
@@ -1583,11 +1570,8 @@ try {
             exSteps.push(metric);
 
             const isLast = exStepIdx >= exTargets.length - 1;
-            if (isLast) {
-              exFinish(heldEnough ? "completed" : "timeout").catch(() => {});
-            } else {
-              exStartStep(exStepIdx + 1);
-            }
+            if (isLast) exFinish(heldEnough ? "completed" : "timeout").catch(() => {});
+            else exStartStep(exStepIdx + 1);
           }
         }
       } else {
@@ -1601,7 +1585,6 @@ try {
         } else {
           ringFill *= 0.92;
           ringErrFill *= 0.92;
-
           if (ringFill < 0.02) {
             ringFill = 0;
             ringErrFill = 0;
@@ -1615,7 +1598,7 @@ try {
       lastFrame = { hz: fr.hz, cents: fr.cents, clarity: fr.clarity, rms: fr.rms };
     }
 
-    // TRY scoring
+    // TRY
     if (attemptActive) {
       if (hasPitchRaw) {
         attemptValid += 1;
@@ -1660,7 +1643,6 @@ try {
 
   async function ensureMicOn() {
     if (running && engine.isMicReady()) return true;
-
     try {
       await engine.initMic();
       running = true;
@@ -1698,14 +1680,13 @@ try {
     await ensureMicOn();
   };
 
-  // REF (manual only outside exercise)
+  // REF manual (outside exercise)
   bindUserGesture(btnRef, () => {
     if (exActive) {
       setHint("REF управляется автоматически в упражнении.", 1400);
       return;
     }
     applyAudioSettings();
-
     if (trainMode === "assist") {
       if (engine.isReferencePlaying()) engine.stopReference();
       else engine.startReference(targetHz);
@@ -1720,7 +1701,6 @@ try {
       setHint("Во время упражнения TRY недоступен.", 1500);
       return;
     }
-
     const ok = await ensureMicOn();
     if (!ok) return;
     if (attemptActive) return;
@@ -1746,7 +1726,8 @@ try {
     exDef = getExerciseById(selExercise.value);
     localStorage.setItem("vtp_exId", exDef.id);
 
-    exTargets = buildFlowTargets(exDef, targetMidi, Math.round(exTransposeCount), Math.round(exTransposeStep));
+    // IMPORTANT: build from rootMidiUser (not drifting runtime)
+    exTargets = buildFlowTargets(exDef, rootMidiUser, Math.round(exTransposeCount), Math.round(exTransposeStep));
     if (!exTargets.length) return;
 
     exActive = true;
@@ -1761,7 +1742,6 @@ try {
     setHint(`START: ${exDef.title[LANG]}`, 900);
 
     exStartStep(0);
-    renderExMeta();
   };
 
   btnExStop.onclick = () => {
@@ -1769,9 +1749,11 @@ try {
     exFinish("stopped").catch(() => {});
   };
 
-  // marker + eq
-  const setMarkerNull = () => setMarkerCents(null);
-  setMarkerNull();
+  // exercise UI
+  selExercise.value = getExerciseById(exIdSaved).id;
+
+  // init marker
+  setMarkerCents(null);
 
   // init note UI
   {
@@ -1780,7 +1762,7 @@ try {
     noteBig.textContent = `${n.name}${n.octave}`;
   }
 
-  // periodic UI update
+  // periodic ui update
   setInterval(updateUI, 140);
 } catch (e) {
   showCrash("BOOT ERROR:", e);

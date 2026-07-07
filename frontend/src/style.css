@@ -375,3 +375,176 @@ html[data-theme="light"] .tabbar{
 .resultsTable th { color: rgba(255,255,255,.75); font-weight: 600; }
 .resultsTable td { color: rgba(255,255,255,.90); }
 .smallMono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+
+/* =========================
+   UI fixes (themes + contrast)
+   ========================= */
+
+:root {
+  --bg: #0b0f14;
+  --card: rgba(17,24,39,.78);
+  --card2: rgba(255,255,255,.04);
+  --text: rgba(255,255,255,.92);
+  --muted: rgba(255,255,255,.70);
+  --muted2: rgba(255,255,255,.55);
+  --border: rgba(255,255,255,.10);
+  --border2: rgba(255,255,255,.14);
+
+  --btnBg: rgba(255,255,255,.06);
+  --btnBgHover: rgba(255,255,255,.10);
+
+  --accent: rgba(52,211,153,.95); /* green */
+  --accentBlue: rgba(96,165,250,.95);
+  --danger: rgba(251,113,133,.95);
+}
+
+:root[data-theme="light"] {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --card2: rgba(17,24,39,.04);
+  --text: rgba(17,24,39,.92);
+  --muted: rgba(17,24,39,.70);
+  --muted2: rgba(17,24,39,.55);
+  --border: rgba(17,24,39,.12);
+  --border2: rgba(17,24,39,.18);
+
+  --btnBg: rgba(17,24,39,.05);
+  --btnBgHover: rgba(17,24,39,.08);
+}
+
+html, body {
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* Make target Hz stand out */
+.targetHzBig {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: .2px;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+.targetLine {
+  font-size: 15px;
+  font-weight: 650;
+  color: var(--muted);
+}
+
+/* Selects / inputs in dark theme */
+.btnLike, select.btnLike, option {
+  background: var(--btnBg);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btnLike:focus, select.btnLike:focus {
+  outline: none;
+  border-color: var(--border2);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+}
+
+/* Buttons: stronger feedback */
+.iconBtn {
+  background: var(--btnBg);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.iconBtn:hover {
+  background: var(--btnBgHover);
+  border-color: var(--border2);
+}
+
+/* prominent state */
+.iconBtn.primary {
+  border-color: rgba(52,211,153,.55);
+  box-shadow: 0 0 0 3px rgba(52,211,153,.12);
+}
+
+/* MIC/REF active states */
+.iconBtn.on-ref {
+  border-color: rgba(96,165,250,.70);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.18);
+}
+.iconBtn.on-mic {
+  border-color: rgba(52,211,153,.70);
+  box-shadow: 0 0 0 3px rgba(52,211,153,.16);
+}
+
+/* compact icon buttons (header + results actions) */
+.iconBtn.mini {
+  padding: 8px 10px;
+}
+.iconBtn.mini .lbl {
+  display: none;
+}
+.iconBtn.mini .ico {
+  width: 18px;
+  height: 18px;
+}
+
+/* Results */
+.resultsWrap .brand {
+  font-size: 15px; /* smaller title */
+  font-weight: 750;
+  line-height: 1.2;
+}
+.resultsMeta {
+  color: var(--muted);
+}
+
+.resultsCanvas {
+  background: var(--card2);
+  border: 1px solid var(--border);
+}
+
+.resultsTable th {
+  color: var(--muted);
+}
+.resultsTable td {
+  color: var(--text);
+}
+
+/* =========================
+   Fix native controls + modal settings
+   ========================= */
+
+/* Helps browser render native controls in correct theme */
+:root { color-scheme: dark; }
+html[data-theme="light"] { color-scheme: light; }
+
+/* Force select colors (some browsers ignore translucent bg) */
+select.btnLike{
+  background: var(--panel) !important;
+  color: var(--text) !important;
+  border-color: var(--line2) !important;
+}
+select.btnLike option{
+  background: var(--panel) !important;
+  color: var(--text) !important;
+}
+
+/* We no longer use bottom tabbar */
+.tabbar{ display:none !important; }
+.container{ padding-bottom: 18px !important; }
+
+/* Settings modal */
+.modalBackdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(10px);
+  display: none;
+  z-index: 9999;
+  padding: 16px;
+  overflow: auto;
+}
+.modalCard{
+  max-width: 980px;
+  margin: 0 auto;
+}
+.modalHeader{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap: 12px;
+}
