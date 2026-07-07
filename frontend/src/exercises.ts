@@ -23,10 +23,12 @@ export const EXERCISES: ExerciseDef[] = [
     kind: "single",
     patternSemis: [0],
     defaultHoldMs: 0,
-    defaultMaxStepMs: 60000,         // длительность сессии по умолчанию (1 мин)
+    defaultMaxStepMs: 60000, // 60s session by default
     defaultTransposeCount: 1,
     defaultTransposeStep: 0,
   },
+
+  // ---- Core (existing) ----
   {
     id: "arp_maj_oct",
     title: { ru: "Арпеджио мажор 1-3-5-8-5-3-1", en: "Major arpeggio 1-3-5-8-5-3-1" },
@@ -55,6 +57,53 @@ export const EXERCISES: ExerciseDef[] = [
     defaultHoldMs: 1300,
     defaultMaxStepMs: 5000,
     defaultTransposeCount: 12,
+    defaultTransposeStep: 1,
+  },
+
+  // ---- Melodic / motif exercises (new) ----
+
+  // 1-3-5-4-3-2-1 (often used as a “zing/zing/zah” style vocalise)
+  {
+    id: "mel_1354321",
+    title: {
+      ru: "Мелодия 1-3-5-4-3-2-1",
+      en: "Melody 1-3-5-4-3-2-1",
+    },
+    kind: "sequence",
+    patternSemis: [0, 4, 7, 5, 4, 2, 0],
+    defaultHoldMs: 1100,
+    defaultMaxStepMs: 4500,
+    defaultTransposeCount: 8,
+    defaultTransposeStep: 1,
+  },
+
+  // “Ladder”: 1-3-2-4-3-5-4-6-5-7-6-8 (very musical; trains quick retargeting)
+  {
+    id: "mel_ladder_132435465768",
+    title: {
+      ru: "Мелодия лесенка 1-3-2-4-3-5-4-6-5-7-6-8",
+      en: "Melody ladder 1-3-2-4-3-5-4-6-5-7-6-8",
+    },
+    kind: "sequence",
+    patternSemis: [0, 4, 2, 5, 4, 7, 5, 9, 7, 11, 9, 12],
+    defaultHoldMs: 900,
+    defaultMaxStepMs: 4000,
+    defaultTransposeCount: 6,
+    defaultTransposeStep: 1,
+  },
+
+  // “Bounce”: 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1 (fun + trains agility)
+  {
+    id: "mel_bounce_121212345454321",
+    title: {
+      ru: "Мелодия пружинка 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
+      en: "Melody bounce 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
+    },
+    kind: "sequence",
+    patternSemis: [0, 2, 0, 2, 0, 2, 4, 5, 7, 5, 7, 5, 4, 2, 0],
+    defaultHoldMs: 800,
+    defaultMaxStepMs: 3500,
+    defaultTransposeCount: 6,
     defaultTransposeStep: 1,
   },
 ];
