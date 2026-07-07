@@ -573,3 +573,36 @@ select.btnLike option{
   color: rgba(125,211,252,.95) !important;
   box-shadow: 0 10px 30px rgba(125,211,252,.08) !important;
 }
+
+/* --- Settings modal: less transparent card --- */
+.modalCard.card{
+  background: rgba(17,24,39,.96) !important;
+  border: 1px solid rgba(255,255,255,.10) !important;
+}
+:root[data-theme="light"] .modalCard.card{
+  background: rgba(255,255,255,.98) !important;
+  border: 1px solid rgba(15,23,42,.12) !important;
+}
+
+/* --- Note picker row --- */
+.notePickerRow{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 10px;
+}
+.notePill{
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border, rgba(255,255,255,.12));
+  background: var(--btnBg, rgba(255,255,255,.06));
+  color: var(--text, rgba(255,255,255,.92));
+  font-weight: 750;
+  letter-spacing: .2px;
+}
+.notePillSmall{
+  padding: 6px 10px;
+  font-weight: 650;
+  opacity: .85;
+}
