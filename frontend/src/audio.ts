@@ -321,8 +321,8 @@ export class AudioEngine {
     const osc = this.ctx.createOscillator();
     const g = this.ctx.createGain();
 
-    osc.type = "sine";
-    osc.frequency.value = 880;
+    osc.type = "triangle";
+    osc.frequency.value = 1320;
 
     const now = this.ctx.currentTime;
     g.gain.setValueAtTime(0.0001, now);
