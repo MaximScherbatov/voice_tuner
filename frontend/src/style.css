@@ -548,3 +548,28 @@ select.btnLike option{
   justify-content:space-between;
   gap: 12px;
 }
+
+/* --- Button state: highlight only when ON --- */
+
+/* primary больше не должен выглядеть "включенным" */
+.iconBtn.primary{
+  border-color: var(--line2) !important;
+  background: rgba(255,255,255,.04) !important;
+  box-shadow: none !important;
+}
+
+/* MIC ON: красная рамка + красный текст/иконка, без "заливки кнопки" */
+.iconBtn.on-mic{
+  border-color: rgba(251,113,133,.85) !important;
+  background: rgba(251,113,133,.04) !important; /* почти незаметно */
+  color: rgba(251,113,133,.95) !important;      /* влияет и на svg, т.к. fill: currentColor */
+  box-shadow: 0 10px 30px rgba(251,113,133,.08) !important;
+}
+
+/* REF ON: голубая рамка + голубой текст/иконка */
+.iconBtn.on-ref{
+  border-color: rgba(125,211,252,.80) !important;
+  background: rgba(125,211,252,.04) !important;
+  color: rgba(125,211,252,.95) !important;
+  box-shadow: 0 10px 30px rgba(125,211,252,.08) !important;
+}
