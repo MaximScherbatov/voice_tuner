@@ -326,14 +326,14 @@ export class AudioEngine {
 
     const now = this.ctx.currentTime;
     g.gain.setValueAtTime(0.0001, now);
-    g.gain.linearRampToValueAtTime(0.08, now + 0.01);
-    g.gain.linearRampToValueAtTime(0.0001, now + 0.08);
+    g.gain.linearRampToValueAtTime(0.12, now + 0.01);
+    g.gain.linearRampToValueAtTime(0.0001, now + 0.11);
 
     osc.connect(g);
     g.connect(this.outGain);
 
     osc.start(now);
-    osc.stop(now + 0.1);
+    osc.stop(now + 0.13);
   }
 
   frame(targetHz: number): Frame {
