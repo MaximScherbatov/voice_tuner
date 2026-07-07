@@ -674,3 +674,11 @@ select.btnLike option{
 .stateLine .indIcon.on-mic{ color: rgba(251,113,133,.95); }
 .stateLine .indIcon.on-ref{ color: rgba(125,211,252,.95); }
 
+
+/* ring flash on success */
+#ringBox.flash{
+  box-shadow:
+    0 0 0 3px rgba(52,211,153,.18),
+    0 0 28px rgba(52,211,153,.22) !important;
+  transition: box-shadow .12s ease;
+}
