@@ -1,24 +1,28 @@
+export type Lang = "ru" | "en";
 export type ExerciseKind = "arpeggio" | "scale" | "sequence";
 
 export type ExerciseDef = {
   id: string;
-  title: string;
+  title: Record<Lang, string>;
   kind: ExerciseKind;
 
   // semitone offsets from root (root = 0)
   patternSemis: number[];
 
   // defaults for Flow mode
-  defaultHoldMs: number;      // how long to stay in green to auto-advance
-  defaultMaxStepMs: number;   // timeout to force-advance (avoid deadlock)
-  defaultTransposeCount: number; // how many transpositions (repetitions)
-  defaultTransposeStep: number;  // semitones per transposition
+  defaultHoldMs: number;        // how long to stay in green to auto-advance
+  defaultMaxStepMs: number;     // timeout to force-advance (avoid deadlock)
+  defaultTransposeCount: number;
+  defaultTransposeStep: number; // semitones per transposition
 };
 
 export const EXERCISES: ExerciseDef[] = [
   {
     id: "arp_maj_oct",
-    title: "Arpeggio Major 1-3-5-8-5-3-1",
+    title: {
+      ru: "Арпеджио мажор 1-3-5-8-5-3-1",
+      en: "Major arpeggio 1-3-5-8-5-3-1",
+    },
     kind: "arpeggio",
     patternSemis: [0, 4, 7, 12, 7, 4, 0],
     defaultHoldMs: 3000,
@@ -28,7 +32,10 @@ export const EXERCISES: ExerciseDef[] = [
   },
   {
     id: "scale_5_maj",
-    title: "Major 5-tone 1-2-3-4-5-4-3-2-1",
+    title: {
+      ru: "Мажор 1-2-3-4-5-4-3-2-1",
+      en: "Major 1-2-3-4-5-4-3-2-1",
+    },
     kind: "scale",
     patternSemis: [0, 2, 4, 5, 7, 5, 4, 2, 0],
     defaultHoldMs: 1600,
@@ -38,7 +45,10 @@ export const EXERCISES: ExerciseDef[] = [
   },
   {
     id: "seq_12321",
-    title: "Sequence 1-2-3-2-1",
+    title: {
+      ru: "Секвенция 1-2-3-2-1",
+      en: "Sequence 1-2-3-2-1",
+    },
     kind: "sequence",
     patternSemis: [0, 2, 4, 2, 0],
     defaultHoldMs: 1300,

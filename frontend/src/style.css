@@ -364,3 +364,14 @@ html[data-theme="light"] .tabbar{
     0 0 28px rgba(52,211,153,.22),
     0 16px 60px rgba(0,0,0,.45);
 }
+
+/* --- Exercise results --- */
+.resultsWrap { margin-top: 14px; display:none; }
+.resultsActions { display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+.resultsMeta { color: rgba(255,255,255,.7); font-size: 13px; margin-top: 6px; }
+.resultsCanvas { width:100%; height:240px; border-radius: 14px; background: rgba(255,255,255,.04); display:block; }
+.resultsTable { width:100%; border-collapse: collapse; font-size: 13px; }
+.resultsTable th, .resultsTable td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.08); text-align:left; }
+.resultsTable th { color: rgba(255,255,255,.75); font-weight: 600; }
+.resultsTable td { color: rgba(255,255,255,.90); }
+.smallMono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
