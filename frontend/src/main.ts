@@ -73,6 +73,17 @@ const I18N: Record<Lang, Record<string, string>> = {
     legend_ghost: "Ghost",
 
     unit_hz: "Гц",
+    unit_ms: "мс",
+    unit_db: "дБ",
+    unit_reps: "повт.",
+    oct_short: "Окт",
+
+    tip_mic_rms: "RMS — сила сигнала на входе (энергия). Чем выше, тем громче/устойчивее звук.",
+    tip_mic_clarity: "Clarity (0..1) — уверенность детектора высоты тона. Чем выше, тем надёжнее pitch.",
+    tip_mic_noise: "Noise — оценка фонового шума (RMS) когда «нет полезного сигнала».",
+    tip_mic_snr: "SNR — отношение сигнал/шум в децибелах. Больше — лучше.",
+    tip_mic_keep: "Keep — удержание состояния при кратких провалах (чтобы показания не «прыгали» на тишине).",
+
     input_spectrum: "Спектр входа",
 
     results_score: "оценка",
@@ -196,6 +207,17 @@ const I18N: Record<Lang, Record<string, string>> = {
     legend_ghost: "Ghost",
 
     unit_hz: "Hz",
+    unit_ms: "ms",
+    unit_db: "dB",
+    unit_reps: "reps",
+    oct_short: "Oct",
+
+    tip_mic_rms: "RMS — input signal strength (energy). Higher means louder / more stable sound.",
+    tip_mic_clarity: "Clarity (0..1) — pitch detector confidence. Higher means more reliable pitch.",
+    tip_mic_noise: "Noise — estimated background RMS when there is no useful signal.",
+    tip_mic_snr: "SNR — signal-to-noise ratio in decibels. Higher is better.",
+    tip_mic_keep: "Keep — short dropout hold to prevent jitter during brief silence.",
+
     input_spectrum: "Input spectrum",
 
     results_score: "score",
