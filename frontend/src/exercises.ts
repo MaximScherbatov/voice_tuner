@@ -63,45 +63,45 @@ export const EXERCISES: ExerciseDef[] = [
     defaultTransposeStep: 1,
   },
 
-  // ---- Melodic (tempo: play full phrase, then sing full phrase) ----
+  // ---- Melodic (short: 5–7 notes) ----
   {
     id: "mel_1354321",
     title: { ru: "Мелодия 1-3-5-4-3-2-1", en: "Melody 1-3-5-4-3-2-1" },
     kind: "melody",
-    patternSemis: [0, 4, 7, 5, 4, 2, 0],
+    patternSemis: [0, 4, 7, 5, 4, 2, 0], // 7 notes
     defaultHoldMs: 0,
     defaultMaxStepMs: 0,
     defaultTransposeCount: 8,
     defaultTransposeStep: 1,
-    tempoMs: 420,
+    tempoMs: 520, // slower
   },
   {
     id: "mel_ladder_132435465768",
     title: {
-      ru: "Мелодия лесенка 1-3-2-4-3-5-4-6-5-7-6-8",
-      en: "Melody ladder 1-3-2-4-3-5-4-6-5-7-6-8",
+      ru: "Мелодия лесенка 1-3-2-4-3-5-4",
+      en: "Melody ladder 1-3-2-4-3-5-4",
     },
     kind: "melody",
-    patternSemis: [0, 4, 2, 5, 4, 7, 5, 9, 7, 11, 9, 12],
+    patternSemis: [0, 4, 2, 5, 4, 7, 5], // 7 notes (shortened)
     defaultHoldMs: 0,
     defaultMaxStepMs: 0,
-    defaultTransposeCount: 6,
+    defaultTransposeCount: 7,
     defaultTransposeStep: 1,
-    tempoMs: 380,
+    tempoMs: 500,
   },
   {
     id: "mel_bounce_121212345454321",
     title: {
-      ru: "Мелодия пружинка 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
-      en: "Melody bounce 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
+      ru: "Мелодия пружинка 1-2-1-2-3-4-5",
+      en: "Melody bounce 1-2-1-2-3-4-5",
     },
     kind: "melody",
-    patternSemis: [0, 2, 0, 2, 0, 2, 4, 5, 7, 5, 7, 5, 4, 2, 0],
+    patternSemis: [0, 2, 0, 2, 4, 5, 7], // 7 notes (shortened)
     defaultHoldMs: 0,
     defaultMaxStepMs: 0,
-    defaultTransposeCount: 6,
+    defaultTransposeCount: 7,
     defaultTransposeStep: 1,
-    tempoMs: 360,
+    tempoMs: 480,
   },
 ];
 

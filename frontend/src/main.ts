@@ -34,65 +34,255 @@ document.documentElement.lang = LANG;
 
 const I18N: Record<Lang, Record<string, string>> = {
   ru: {
+    app_title: "Тренажёр голоса",
+    app_title_short: "Voice Trainer",
+
     theme: "Тема",
     settings: "Настройки",
     close: "Закрыть",
     language: "Язык",
+
     target_note: "Целевая нота",
     mode: "Режим",
     assist: "ASSIST",
     challenge: "CHALLENGE",
+
     ring_mode: "Режим кольца",
     live: "LIVE",
     score: "SCORE",
+
     green_zone: "Зелёная зона ±%",
     exercises_hold: "Упражнения: удержание (Flow), мс",
     exercises_max_step: "Упражнения: max шаг / длительность Single, мс",
     exercises_reps: "Упражнения: транспозиции (reps)",
     ref_volume: "Громкость эталона",
     mic_sens: "Чувствительность микрофона",
+
     start: "START",
     stop: "STOP",
+
     results_title: "Результат упражнения",
     saved: "Сохранено",
     save_error: "Ошибка сохранения",
+
     stop_to_edit_root: "Остановите упражнение (STOP), чтобы менять стартовую ноту.",
     hint_start: "Нажмите START, чтобы начать упражнение.",
+
     legend_target: "Цель",
     legend_current: "Текущая",
     legend_ghost: "Ghost",
+
+    unit_hz: "Гц",
+    input_spectrum: "Спектр входа",
+
+    results_score: "оценка",
+    results_time: "время",
+    results_avg_t2g: "средн. time-to-green",
+
+    col_step: "Шаг",
+    col_note: "Нота",
+    col_t2g: "T2G",
+    col_green: "Green",
+    col_pct: "%",
+    col_med: "Med",
+    col_p95: "P95",
+    col_corr: "Corr",
+    col_drift: "Drift",
+
+    tip_lang: "Язык интерфейса",
+    tip_theme: "Переключить тему",
+    tip_settings: "Открыть настройки",
+
+    tip_exercise: "Выбор упражнения",
+
+    tip_mode_assist: "ASSIST: эталон звучит постоянно (рекомендуются наушники).",
+    tip_mode_challenge: "CHALLENGE: эталон звучит коротко в начале шага.",
+
+    tip_start: "Старт: включить микрофон и начать упражнение.",
+    tip_stop: "Стоп: остановить упражнение (и микрофон).",
+
+    tip_root_semi_down: "Понизить на полтона",
+    tip_root_semi_up: "Повысить на полтона",
+    tip_root_oct_down: "Октава вниз",
+    tip_root_oct_up: "Октава вверх",
+    tip_root_pill: "Стартовая (root) нота упражнения",
+
+    tip_copy: "Скопировать JSON результата",
+    tip_download: "Скачать JSON результата",
+    tip_share: "Поделиться текстом результата",
+
+    tip_col_step: "Номер шага в упражнении",
+    tip_col_note: "Целевая нота шага",
+    tip_col_t2g: "Время до первого устойчивого попадания в зелёную зону (мс)",
+    tip_col_green: "Суммарное время в зелёной зоне (мс)",
+    tip_col_pct: "Доля времени шага в зелёной зоне (%)",
+    tip_col_med: "Медиана |cents| (точность)",
+    tip_col_p95: "95-й перцентиль |cents| (устойчивость)",
+    tip_col_corr: "Смены знака ошибки до попадания в зелёную зону (коррекции)",
+    tip_col_drift: "Дрейф (cents/сек) после попадания в зелёную зону",
+
+    tip_headphones_panel:
+      "ASSIST: рекомендованы наушники (иначе микрофон может «слышать» эталон).",
+
+    // modal tooltips
+    tip_sel_lang: "Выберите язык интерфейса.",
+    tip_target_note: "Нота, от которой строится упражнение (root).",
+    tip_ring_mode: "LIVE: быстрее. SCORE: стабильнее (сильнее сглаживание).",
+    tip_tol: "Ширина зелёной зоны в процентах частоты (±%).",
+    tip_ex_hold: "Flow: сколько нужно удерживать ноту в зелёной зоне, чтобы перейти дальше.",
+    tip_ex_max_step: "Максимальная длительность одного шага (и вся длительность режима Single).",
+    tip_ex_reps: "Сколько транспозиций сделать подряд (повторы паттерна с повышением root).",
+    tip_ref_vol: "Громкость эталона (референс‑тона).",
+    tip_mic_sens: "Усиление входа микрофона (влияет на чувствительность анализа).",
+
+    // status strings
+    status_idle: "ожидание",
+    status_idle_mic: "ожидание (микрофон)",
+    status_exercise: "упражнение",
+    label_status: "Статус",
+    label_saved: "Сохранение",
+    label_root: "Старт",
+    label_ex: "Упр",
+
+    on: "вкл",
+    off: "выкл",
+
+    mic_meta:
+      "rms: {rms} • clarity: {clarity} • noise: {noise} • snr: {snr} dB • keep: {keep}",
+    keep_yes: "да",
+    keep_no: "нет",
+
+    copied: "Скопировано.",
+    share_copied: "Текст для шаринга скопирован.",
+    mic_error: "Ошибка микрофона: ",
   },
   en: {
+    app_title: "Voice Trainer",
+    app_title_short: "Voice Trainer",
+
     theme: "Theme",
     settings: "Settings",
     close: "Close",
     language: "Language",
+
     target_note: "Target note",
     mode: "Mode",
     assist: "ASSIST",
     challenge: "CHALLENGE",
+
     ring_mode: "Ring mode",
     live: "LIVE",
     score: "SCORE",
+
     green_zone: "Green zone ±%",
     exercises_hold: "Exercises: hold (Flow), ms",
     exercises_max_step: "Exercises: max step / Single duration, ms",
     exercises_reps: "Exercises: transpositions (reps)",
     ref_volume: "Ref volume",
     mic_sens: "Mic sensitivity",
+
     start: "START",
     stop: "STOP",
+
     results_title: "Exercise result",
     saved: "Saved",
     save_error: "Save error",
+
     stop_to_edit_root: "Stop the exercise (STOP) to change the root note.",
     hint_start: "Press START to begin the exercise.",
+
     legend_target: "Target",
     legend_current: "Current",
     legend_ghost: "Ghost",
+
+    unit_hz: "Hz",
+    input_spectrum: "Input spectrum",
+
+    results_score: "score",
+    results_time: "time",
+    results_avg_t2g: "avg time-to-green",
+
+    col_step: "Step",
+    col_note: "Note",
+    col_t2g: "T2G",
+    col_green: "Green",
+    col_pct: "%",
+    col_med: "Med",
+    col_p95: "P95",
+    col_corr: "Corr",
+    col_drift: "Drift",
+
+    tip_lang: "Interface language",
+    tip_theme: "Toggle theme",
+    tip_settings: "Open settings",
+
+    tip_exercise: "Choose exercise",
+
+    tip_mode_assist: "ASSIST: continuous reference tone (headphones recommended).",
+    tip_mode_challenge: "CHALLENGE: short reference tone at step start.",
+
+    tip_start: "Start: turn mic on and begin the exercise.",
+    tip_stop: "Stop: stop the exercise (and mic).",
+
+    tip_root_semi_down: "Down one semitone",
+    tip_root_semi_up: "Up one semitone",
+    tip_root_oct_down: "Octave down",
+    tip_root_oct_up: "Octave up",
+    tip_root_pill: "Exercise root note",
+
+    tip_copy: "Copy result JSON",
+    tip_download: "Download result JSON",
+    tip_share: "Share summary text",
+
+    tip_col_step: "Step number in the exercise",
+    tip_col_note: "Target note for the step",
+    tip_col_t2g: "Time to first stable in-tune (ms)",
+    tip_col_green: "Total time in tune (ms)",
+    tip_col_pct: "Percent of step time in tune (%)",
+    tip_col_med: "Median |cents| (accuracy)",
+    tip_col_p95: "95th percentile |cents| (stability)",
+    tip_col_corr: "Error sign changes before first in-tune (corrections)",
+    tip_col_drift: "Drift (cents/sec) after reaching in tune",
+
+    tip_headphones_panel:
+      "ASSIST: headphones recommended (otherwise mic may capture the reference tone).",
+
+    // modal tooltips
+    tip_sel_lang: "Choose interface language.",
+    tip_target_note: "The root note used to build the exercise.",
+    tip_ring_mode: "LIVE: faster. SCORE: more stable (stronger smoothing).",
+    tip_tol: "Green zone width as a percent of frequency (±%).",
+    tip_ex_hold: "Flow: required time in the green zone to advance to the next step.",
+    tip_ex_max_step: "Max duration of a step (and total duration for Single mode).",
+    tip_ex_reps: "How many transpositions (repetitions) to run in a row.",
+    tip_ref_vol: "Reference tone volume.",
+    tip_mic_sens: "Mic input gain (affects analysis sensitivity).",
+
+    // status strings
+    status_idle: "idle",
+    status_idle_mic: "idle (mic)",
+    status_exercise: "exercise",
+    label_status: "Status",
+    label_saved: "Saved",
+    label_root: "Root",
+    label_ex: "EX",
+
+    on: "on",
+    off: "off",
+
+    mic_meta:
+      "rms: {rms} • clarity: {clarity} • noise: {noise} • snr: {snr} dB • keep: {keep}",
+    keep_yes: "yes",
+    keep_no: "no",
+
+    copied: "Copied.",
+    share_copied: "Share text copied.",
+    mic_error: "Mic error: ",
   },
 };
+
 const t = (k: string) => I18N[LANG][k] ?? k;
+document.title = t("app_title");
 
 /** utils */
 function clamp(x: number, a: number, b: number) {
@@ -145,12 +335,20 @@ function slopeCentsPerS(series: Array<{ t: number; cents: number }>): number | n
   let num = 0;
   let den = 0;
   for (let i = 0; i < n; i++) {
-    const dt = ts[i] - tMean;
-    num += dt * (cs[i] - cMean);
-    den += dt * dt;
+    const dt0 = ts[i] - tMean;
+    num += dt0 * (cs[i] - cMean);
+    den += dt0 * dt0;
   }
   if (den <= 1e-9) return null;
   return num / den;
+}
+function fmtHz(x: number) {
+  return `${x.toFixed(1)} ${t("unit_hz")}`;
+}
+function formatTemplate(s: string, kv: Record<string, string>) {
+  let out = s;
+  for (const [k, v] of Object.entries(kv)) out = out.replaceAll(`{${k}}`, v);
+  return out;
 }
 
 /** auth (anonymous token) */
@@ -251,7 +449,6 @@ function ensureDefaults() {
   setIfNull("vtp_tolPct", "1.5");
   setIfNull("vtp_lang", LANG);
 
-  // Ref volume default >= 50 and sticky
   const rvStr = localStorage.getItem("vtp_refVol");
   const rv = Number(rvStr);
   const rvUserSet = localStorage.getItem("vtp_refVolUserSet");
@@ -280,7 +477,7 @@ const ICONS = {
   spk: `<svg class="ico" viewBox="0 0 24 24"><path d="M3 10v4h4l5 4V6L7 10H3Zm13.5 2a4.5 4.5 0 0 0-2.5-4.03v8.06A4.5 4.5 0 0 0 16.5 12Zm0-9.5v2.12A9 9 0 0 1 20 12a9 9 0 0 1-3.5 7.38v2.12A11 11 0 0 0 22 12 11 11 0 0 0 16.5 2.5Z"/></svg>`,
   play: `<svg class="ico" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>`,
   stop: `<svg class="ico" viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>`,
-  gear: `<svg class="ico" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
+  gear: `<svg class="ico" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.1 7.1 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 1h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.12.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 7.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94L2.83 14.52a.5.5 0 0 0-.12.64l1.92 3.32c.13.22.39.3.6.22l2.39-.96c.51.4 1.05.71 1.63.94l.36 2.54c.04.24.25.42.49.42h3.8c.24 0 .45-.18.49-.42l.36-2.54c.58-.23 1.12-.54 1.63-.94l2.39.96c.22.08.47 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8a3.5 3.5 0 0 1 0 7.5Z"/></svg>`,
   copy: `<svg class="ico" viewBox="0 0 24 24"><path d="M16 1H6a2 2 0 0 0-2 2v10h2V3h10V1Zm3 4H10a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h9a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2Zm0 16H10V7h9v14Z"/></svg>`,
   download: `<svg class="ico" viewBox="0 0 24 24"><path d="M5 20h14v-2H5v2Zm7-18v10.17l3.59-3.58L17 10l-5 5-5-5 1.41-1.41L11 12.17V2h1Z"/></svg>`,
   share: `<svg class="ico" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a2.5 2.5 0 0 0 0-1.39l7-4.11A2.99 2.99 0 1 0 14 5a2.9 2.9 0 0 0 .04.49l-7 4.11a3 3 0 1 0 0 4.8l7.12 4.17c-.03.16-.05.32-.05.49a3 3 0 1 0 3-3Z"/></svg>`,
@@ -288,6 +485,10 @@ const ICONS = {
   right: `<svg class="ico" viewBox="0 0 24 24"><path d="M8.6 16.6 10 18l6-6-6-6-1.4 1.4L13.2 12z"/></svg>`,
   minus: `<svg class="ico" viewBox="0 0 24 24"><path d="M19 13H5v-2h14v2z"/></svg>`,
   plus: `<svg class="ico" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>`,
+
+  globe: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.16a15.8 15.8 0 0 0-1.2-5.02A8.02 8.02 0 0 1 19.93 11ZM12 4c.9 1.23 1.66 3.3 2.07 7H9.93C10.34 7.3 11.1 5.23 12 4ZM4.07 13h3.16c.2 1.78.65 3.53 1.2 5.02A8.02 8.02 0 0 1 4.07 13Zm3.16-2H4.07a8.02 8.02 0 0 1 4.36-5.02A15.8 15.8 0 0 0 7.23 11Zm2.7 2h4.14c-.41 3.7-1.17 5.77-2.07 7-.9-1.23-1.66-3.3-2.07-7Zm6.84 0h3.16a8.02 8.02 0 0 1-4.36 5.02c.55-1.49 1-3.24 1.2-5.02Z"/></svg>`,
+  sun: `<svg class="ico" viewBox="0 0 24 24"><path d="M6.76 4.84 5.35 3.43 3.93 4.85l1.41 1.41 1.42-1.42ZM12 4V1h-1v3h1Zm7.07.85-1.42-1.42-1.41 1.41 1.41 1.41 1.42-1.38ZM20 13h3v-1h-3v1ZM12 23v-3h-1v3h1Zm-8-10H1v-1h3v1Zm15.66 6.24 1.41 1.41 1.42-1.42-1.41-1.41-1.42 1.42ZM4.85 20.07l1.41-1.41-1.42-1.42-1.41 1.41 1.42 1.42ZM12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/></svg>`,
+  moon: `<svg class="ico" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>`,
 };
 
 try {
@@ -316,15 +517,12 @@ try {
 
   let tolPct = clamp(loadNum("vtp_tolPct", 1.5), 0.5, 3.0);
 
-  // Root note user-picked
   let rootMidiUser = Number(localStorage.getItem("vtp_targetMidi") ?? "60");
   if (!Number.isFinite(rootMidiUser)) rootMidiUser = 60;
 
-  // runtime target
   let targetMidi = rootMidiUser;
   let targetHz = midiToHz(targetMidi);
 
-  // constants
   const SAMPLE_MS = 50;
   const MIN_HZ = 70;
   const MAX_HZ = 1000;
@@ -333,7 +531,6 @@ try {
   const CLARITY_OFF = 0.62;
   const RMS_MIN = 0.006;
 
-  // SNR/noise-floor (as before)
   const NOISE_RMS_INIT = 0.003;
   const NOISE_ALPHA_UP = 0.002;
   const NOISE_ALPHA_DOWN = 0.06;
@@ -349,7 +546,6 @@ try {
   const getAlpha = () => (ringMode === "score" ? 0.2 : 0.35);
   const getRingAlpha = () => (ringMode === "score" ? 0.2 : 0.28);
 
-  // runtime state
   let running = false;
   let lastSampleTs = 0;
 
@@ -361,13 +557,11 @@ try {
 
   let lastFrame = { hz: null as number | null, cents: null as number | null, clarity: 0, rms: 0 };
 
-  // success feedback (beep + flash)
   let inTuneMs = 0;
   let lastSuccessAt = 0;
   const SUCCESS_HOLD_MS = 300;
   const SUCCESS_COOLDOWN_MS = 1200;
 
-  // hint lock
   let hintLockUntil = 0;
   let hintEl: HTMLDivElement;
   const setHint = (msg: string, lockMs = 0) => {
@@ -375,18 +569,15 @@ try {
     hintLockUntil = Math.max(hintLockUntil, nowMs() + lockMs);
   };
 
-  // window samples
   type Sample = { t: number; hz: number; ratio: number; errPct: number; cents: number };
   let win: Sample[] = [];
 
-  // gating
   let gateOn = false;
   let lastGoodAt = 0;
   let lastStableAt = 0;
   let lastGoodSample: Sample | null = null;
   let centsHold: number | null = null;
 
-  // SNR state
   let noiseRms = NOISE_RMS_INIT;
   let snrDbDisp = 0;
   let energyKeepDisp = false;
@@ -394,11 +585,9 @@ try {
 
   let recentRealPitchAt = 0;
 
-  // EQ
   const EQ_N = 18;
   let eqVals = Array(EQ_N).fill(0);
 
-  // Exercise Runner (Flow)
   type StepMetric = {
     step_index: number;
     target_midi: number;
@@ -442,7 +631,6 @@ try {
   let exTransposeCount = loadNum("vtp_exTransposeCount", 8);
   let exTransposeStep = loadNum("vtp_exTransposeStep", 1);
 
-  // per-step accumulators
   let exGreenConfirmMs = 0;
   let exTimeToGreenMs: number | null = null;
   let exTimeInGreenMs = 0;
@@ -468,7 +656,6 @@ try {
   const EX_CONFIRM_MS = 220;
   const EX_TRACE_PERIOD_MS = 100;
 
-  // Results UI state
   let lastExercisePayload: any = null;
   let lastExerciseTitle = "";
   let lastExerciseFinishedAt: Date | null = null;
@@ -534,52 +721,58 @@ try {
   const refVol0 = loadNum("vtp_refVol", 60);
   const micSens0 = loadNum("vtp_micSens", 120);
 
-  // UI
   app.innerHTML = `
   <div class="container">
     <div class="card">
       <div class="header">
         <div>
-          <div class="brand">Voice Trainer</div>
+          <div class="brand">${t("app_title_short")}</div>
         </div>
-        <div class="badges" style="display:flex; gap:10px; align-items:center">
-          <button class="iconBtn mini" id="btnTopLang"><span class="lbl">${LANG.toUpperCase()}</span></button>
-          <button class="iconBtn mini" id="btnTopTheme">${ICONS.stop}<span class="lbl">${t("theme")}</span></button>
-          <button class="iconBtn mini" id="btnTopSettings">${ICONS.gear}<span class="lbl">${t("settings")}</span></button>
+        <div class="badges">
+          <button class="iconBtn mini" id="btnTopLang" data-tip="${t("tip_lang")}">${ICONS.globe}</button>
+          <button class="iconBtn mini" id="btnTopTheme" data-tip="${t("tip_theme")}"></button>
+          <button class="iconBtn mini" id="btnTopSettings" data-tip="${t("tip_settings")}">${ICONS.gear}</button>
         </div>
       </div>
 
       <div class="row" style="margin-top:10px;gap:10px;align-items:center;flex-wrap:wrap">
         <div class="small" id="subTitle">—</div>
-        <span class="badge" id="badgeState">Status: idle</span>
-        <span class="badge" id="badgeSave">Save: —</span>
+        <span class="badge" id="badgeState">—</span>
+        <span class="badge" id="badgeSave">—</span>
       </div>
 
-      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap">
-        <select class="btnLike" id="selExercise" style="min-width:280px"></select>
-        <button class="iconBtn" id="btnStart">${ICONS.play}<span class="lbl">${t("start")}</span></button>
-        <button class="iconBtn" id="btnStop">${ICONS.stop}<span class="lbl">${t("stop")}</span></button>
+      <div class="row" style="margin-top:10px;gap:10px;flex-wrap:wrap;align-items:center">
+        <div class="tipWrap" data-tip="${t("tip_exercise")}">
+          <select class="btnLike" id="selExercise" style="min-width:280px"></select>
+        </div>
+
+        <button class="iconBtn ledGreen" id="modeAssist" data-tip="${t("tip_mode_assist")}">
+          <span class="modeIco">∞</span><span class="lbl">${t("assist")}</span>
+        </button>
+        <button class="iconBtn ledBlue" id="modeChallenge" data-tip="${t("tip_mode_challenge")}">
+          <span class="modeIco">⏱</span><span class="lbl">${t("challenge")}</span>
+        </button>
       </div>
 
       <div class="notePickerRow">
-        <button class="iconBtn mini" id="btnSemiDown">${ICONS.left}<span class="lbl">-1</span></button>
-        <div class="notePill" id="rootNotePill">C3</div>
-        <button class="iconBtn mini" id="btnSemiUp">${ICONS.right}<span class="lbl">+1</span></button>
+        <button class="iconBtn mini" id="btnSemiDown" data-tip="${t("tip_root_semi_down")}">${ICONS.left}</button>
+        <div class="notePill" id="rootNotePill" data-tip="${t("tip_root_pill")}">C3</div>
+        <button class="iconBtn mini" id="btnSemiUp" data-tip="${t("tip_root_semi_up")}">${ICONS.right}</button>
 
-        <button class="iconBtn mini" id="btnOctDown">${ICONS.minus}<span class="lbl">oct-</span></button>
-        <div class="notePill notePillSmall" id="octPill">Oct 3</div>
-        <button class="iconBtn mini" id="btnOctUp">${ICONS.plus}<span class="lbl">oct+</span></button>
+        <button class="iconBtn mini" id="btnOctDown" data-tip="${t("tip_root_oct_down")}">${ICONS.minus}</button>
+        <div class="notePill notePillSmall" id="octPill" data-tip="${t("tip_root_pill")}">Oct 3</div>
+        <button class="iconBtn mini" id="btnOctUp" data-tip="${t("tip_root_oct_up")}">${ICONS.plus}</button>
 
         <div style="flex:1"></div>
         <div class="small" id="rootHzLabel" style="opacity:.85"></div>
       </div>
 
       <div class="stateLine" id="stateLine">
-        <span id="stRoot">Root: —</span>
+        <span id="stRoot">—</span>
         <span class="stateSep">•</span>
-        <span class="stateItem"><span class="indIcon" id="indMic">${ICONS.mic}</span><span id="stMic">off</span></span>
+        <span class="stateItem"><span class="indIcon" id="indMic">${ICONS.mic}</span><span id="stMic">—</span></span>
         <span class="stateSep">•</span>
-        <span class="stateItem"><span class="indIcon" id="indSpk">${ICONS.spk}</span><span id="stRef">off</span></span>
+        <span class="stateItem"><span class="indIcon" id="indSpk">${ICONS.spk}</span><span id="stRef">—</span></span>
         <span class="stateSep" id="stExSep" style="display:none">•</span>
         <span id="stEx" style="display:none"></span>
       </div>
@@ -602,26 +795,31 @@ try {
             </svg>
 
             <div class="ringContent">
-              <div class="noteRu" id="noteRu">До</div>
+              <div class="noteRu" id="noteRu">—</div>
               <div class="noteBig" id="noteBig">C4</div>
-              <div class="hzBig" id="hzBig">— Hz</div>
+              <div class="hzBig" id="hzBig">—</div>
               <div class="delta" id="delta">—%</div>
             </div>
           </div>
 
-          <div class="tip" id="tipPhones" style="display:none">
-            Assist: рекомендованы наушники (иначе микрофон может “слышать” эталон).
-          </div>
+          <div class="tip" id="tipPhones" style="display:none">${t("tip_headphones_panel")}</div>
         </div>
 
         <div>
-          <div class="targetHzBig" id="targetHzBig">— Hz</div>
-          <div class="targetLine" id="targetLine">—</div>
+          <div class="actionBar">
+            <button class="iconBtn ledGreen" id="btnStart" data-tip="${t("tip_start")}">
+              ${ICONS.play}<span class="lbl">${t("start")}</span>
+            </button>
+            <button class="iconBtn ledRed" id="btnStop" data-tip="${t("tip_stop")}">
+              ${ICONS.stop}<span class="lbl">${t("stop")}</span>
+            </button>
+          </div>
+
           <div class="hint" id="hint">—</div>
 
           <div class="eqWrap">
             <div class="eq" id="eq"></div>
-            <div class="small" style="margin-top:10px">Input spectrum</div>
+            <div class="small" style="margin-top:10px">${t("input_spectrum")}</div>
           </div>
 
           <div class="tunerWrap">
@@ -642,9 +840,9 @@ try {
           <div class="resultsMeta" id="resultsMeta"></div>
         </div>
         <div class="resultsActions">
-          <button class="iconBtn mini" id="btnResCopy">${ICONS.copy}<span class="lbl">copy</span></button>
-          <button class="iconBtn mini" id="btnResDownload">${ICONS.download}<span class="lbl">download</span></button>
-          <button class="iconBtn mini" id="btnResShare">${ICONS.share}<span class="lbl">share</span></button>
+          <button class="iconBtn mini" id="btnResCopy" data-tip="${t("tip_copy")}">${ICONS.copy}</button>
+          <button class="iconBtn mini" id="btnResDownload" data-tip="${t("tip_download")}">${ICONS.download}</button>
+          <button class="iconBtn mini" id="btnResShare" data-tip="${t("tip_share")}">${ICONS.share}</button>
         </div>
       </div>
 
@@ -668,7 +866,7 @@ try {
 
         <div class="hr"></div>
 
-        <div class="small">${t("language")}</div>
+        <div class="small" data-tip="${t("tip_sel_lang")}">${t("language")}</div>
         <div class="row">
           <select class="btnLike" id="selLang">
             <option value="ru">RU</option>
@@ -678,7 +876,7 @@ try {
 
         <div class="hr"></div>
 
-        <div class="small">${t("target_note")}</div>
+        <div class="small" data-tip="${t("tip_target_note")}">${t("target_note")}</div>
         <div class="row">
           <select class="btnLike" id="selNote"></select>
           <select class="btnLike" id="selOct"></select>
@@ -687,52 +885,44 @@ try {
 
         <div class="hr"></div>
 
-        <div class="small">${t("mode")}</div>
+        <div class="small" data-tip="${t("tip_ring_mode")}">${t("ring_mode")}</div>
         <div class="row">
-          <button class="iconBtn" id="modeAssist"><span class="lbl">${t("assist")}</span></button>
-          <button class="iconBtn" id="modeChallenge"><span class="lbl">${t("challenge")}</span></button>
+          <button class="iconBtn ledGreen" id="ringLive"><span class="lbl">${t("live")}</span></button>
+          <button class="iconBtn ledBlue" id="ringScore"><span class="lbl">${t("score")}</span></button>
         </div>
 
         <div class="hr"></div>
 
-        <div class="small">${t("ring_mode")}</div>
-        <div class="row">
-          <button class="iconBtn" id="ringLive"><span class="lbl">${t("live")}</span></button>
-          <button class="iconBtn" id="ringScore"><span class="lbl">${t("score")}</span></button>
-        </div>
-
-        <div class="hr"></div>
-
-        <div class="small">${t("green_zone")}</div>
+        <div class="small" data-tip="${t("tip_tol")}">${t("green_zone")}</div>
         <input class="slider" id="tolPct" type="range" min="0.5" max="3.0" step="0.1" value="${tolPct}" />
         <div class="small" id="tolMeta">±${tolPct.toFixed(1)}%</div>
 
         <div class="hr"></div>
 
-        <div class="small">${t("exercises_hold")}</div>
+        <div class="small" data-tip="${t("tip_ex_hold")}">${t("exercises_hold")}</div>
         <input class="slider" id="exHoldMs" type="range" min="0" max="4000" step="100" value="${exHoldMs}" />
         <div class="small" id="exHoldMeta">${Math.round(exHoldMs)} ms</div>
 
         <div style="height:12px"></div>
 
-        <div class="small">${t("exercises_max_step")}</div>
+        <div class="small" data-tip="${t("tip_ex_max_step")}">${t("exercises_max_step")}</div>
         <input class="slider" id="exMaxStepMs" type="range" min="2000" max="120000" step="250" value="${exMaxStepMs}" />
         <div class="small" id="exMaxStepMeta">${Math.round(exMaxStepMs)} ms</div>
 
         <div style="height:12px"></div>
 
-        <div class="small">${t("exercises_reps")}</div>
+        <div class="small" data-tip="${t("tip_ex_reps")}">${t("exercises_reps")}</div>
         <input class="slider" id="exTrCount" type="range" min="1" max="24" step="1" value="${exTransposeCount}" />
         <div class="small" id="exTrMeta">${Math.round(exTransposeCount)} reps</div>
 
         <div class="hr"></div>
 
-        <div class="small">${t("ref_volume")}</div>
+        <div class="small" data-tip="${t("tip_ref_vol")}">${t("ref_volume")}</div>
         <input class="slider" id="refVol" type="range" min="0" max="100" value="${refVol0}" />
 
         <div style="height:12px"></div>
 
-        <div class="small">${t("mic_sens")}</div>
+        <div class="small" data-tip="${t("tip_mic_sens")}">${t("mic_sens")}</div>
         <input class="slider" id="micSens" type="range" min="50" max="300" value="${micSens0}" />
         <div class="small" id="micMeta"></div>
       </div>
@@ -745,6 +935,108 @@ try {
     if (!el) throw new Error(`UI element not found: ${sel}`);
     return el as T;
   };
+
+  /** Pretty tooltips (custom) */
+  const tipEl = document.createElement("div");
+  tipEl.id = "vtpTip";
+  tipEl.className = "tipBubble";
+  tipEl.style.display = "none";
+  document.body.appendChild(tipEl);
+
+  let tipTarget: HTMLElement | null = null;
+  let longPressTimer: any = null;
+  let autoHideTimer: any = null;
+
+  const hideTip = () => {
+    tipTarget = null;
+    tipEl.style.display = "none";
+    tipEl.textContent = "";
+    if (autoHideTimer) clearTimeout(autoHideTimer);
+    autoHideTimer = null;
+  };
+
+  const positionTip = (x: number, y: number) => {
+    const pad = 10;
+    const w = tipEl.offsetWidth || 240;
+    const h = tipEl.offsetHeight || 40;
+
+    let left = x + 12;
+    let top = y + 14;
+
+    if (left + w + pad > window.innerWidth) left = x - w - 12;
+    if (top + h + pad > window.innerHeight) top = y - h - 14;
+    left = clamp(left, pad, Math.max(pad, window.innerWidth - w - pad));
+    top = clamp(top, pad, Math.max(pad, window.innerHeight - h - pad));
+
+    tipEl.style.left = `${left}px`;
+    tipEl.style.top = `${top}px`;
+  };
+
+  const showTip = (el: HTMLElement, x: number, y: number) => {
+    const msg = (el.getAttribute("data-tip") ?? "").trim();
+    if (!msg) return;
+
+    tipTarget = el;
+    tipEl.textContent = msg;
+    tipEl.style.display = "block";
+    requestAnimationFrame(() => positionTip(x, y));
+  };
+
+  // hover + move (desktop)
+  document.addEventListener("pointerover", (e) => {
+    const el = (e.target as HTMLElement | null)?.closest?.("[data-tip]") as HTMLElement | null;
+    if (!el) return;
+    const msg = (el.getAttribute("data-tip") ?? "").trim();
+    if (!msg) return;
+    showTip(el, (e as PointerEvent).clientX, (e as PointerEvent).clientY);
+  });
+  document.addEventListener("pointermove", (e) => {
+    if (!tipTarget) return;
+    positionTip((e as PointerEvent).clientX, (e as PointerEvent).clientY);
+  });
+  document.addEventListener("pointerout", (e) => {
+    if (!tipTarget) return;
+    const rel = (e as PointerEvent).relatedTarget as Node | null;
+    if (rel && tipTarget.contains(rel)) return;
+    hideTip();
+  });
+
+  // focus tooltips (keyboard)
+  document.addEventListener("focusin", (e) => {
+    const el = (e.target as HTMLElement | null)?.closest?.("[data-tip]") as HTMLElement | null;
+    if (!el) return;
+    const r = el.getBoundingClientRect();
+    showTip(el, r.left + r.width / 2, r.top);
+  });
+  document.addEventListener("focusout", () => hideTip());
+
+  // long-press tooltips (touch)
+  document.addEventListener("pointerdown", (e) => {
+    // tap outside closes tip (mobile UX)
+    if (tipEl.style.display !== "none") {
+      const hit = (e.target as HTMLElement | null)?.closest?.("[data-tip]") as HTMLElement | null;
+      if (!hit) hideTip();
+    }
+
+    const el = (e.target as HTMLElement | null)?.closest?.("[data-tip]") as HTMLElement | null;
+    if (!el) return;
+    const msg = (el.getAttribute("data-tip") ?? "").trim();
+    if (!msg) return;
+
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = setTimeout(() => {
+      showTip(el, (e as PointerEvent).clientX, (e as PointerEvent).clientY);
+      autoHideTimer = setTimeout(() => hideTip(), 2600);
+    }, 520);
+  });
+  document.addEventListener("pointerup", () => {
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = null;
+  });
+  document.addEventListener("pointercancel", () => {
+    if (longPressTimer) clearTimeout(longPressTimer);
+    longPressTimer = null;
+  });
 
   const subTitle = q<HTMLDivElement>("#subTitle");
   const badgeState = q<HTMLSpanElement>("#badgeState");
@@ -784,8 +1076,6 @@ try {
   const hzBig = q<HTMLDivElement>("#hzBig");
   const delta = q<HTMLDivElement>("#delta");
 
-  const targetHzBig = q<HTMLDivElement>("#targetHzBig");
-  const targetLine = q<HTMLDivElement>("#targetLine");
   hintEl = q<HTMLDivElement>("#hint");
   const tipPhones = q<HTMLDivElement>("#tipPhones");
 
@@ -833,13 +1123,11 @@ try {
   eq.innerHTML = Array.from({ length: EQ_N }).map(() => "<span></span>").join("");
   const eqBars = Array.from(eq.querySelectorAll("span")) as HTMLSpanElement[];
 
-  // flash helper
   const flashSuccess = () => {
     ringBox.classList.add("flash");
     setTimeout(() => ringBox.classList.remove("flash"), 180);
   };
 
-  // settings modal open/close
   const openSettings = () => {
     settingsModal.style.display = "block";
     selLang.value = LANG;
@@ -854,6 +1142,12 @@ try {
     if (e.target === settingsModal) closeSettings();
   });
 
+  const renderThemeIcon = () => {
+    const isLight = document.documentElement.getAttribute("data-theme") === "light";
+    btnTopTheme.innerHTML = isLight ? ICONS.moon : ICONS.sun;
+  };
+  renderThemeIcon();
+
   btnTopLang.onclick = () => {
     const v = LANG === "ru" ? "en" : "ru";
     localStorage.setItem("vtp_lang", v);
@@ -862,10 +1156,10 @@ try {
   btnTopTheme.onclick = () => {
     const t0 = document.documentElement.getAttribute("data-theme") === "light" ? "dark" : "light";
     applyTheme(t0);
+    renderThemeIcon();
     if (lastExercisePayload) renderResults(lastExercisePayload, lastGhost);
   };
 
-  // language dropdown
   selLang.value = LANG;
   selLang.onchange = () => {
     const v = selLang.value === "en" ? "en" : "ru";
@@ -873,7 +1167,6 @@ try {
     location.reload();
   };
 
-  // audio
   const applyAudioSettings = () => {
     engine.setReferenceVolume((Number(refVol.value) / 100) * 0.6);
     engine.setMicSensitivity(Number(micSens.value) / 100);
@@ -890,7 +1183,6 @@ try {
   };
   applyAudioSettings();
 
-  // tol
   tolPctSlider.oninput = () => {
     tolPct = clamp(Number(tolPctSlider.value), 0.5, 3.0);
     localStorage.setItem("vtp_tolPct", String(tolPct));
@@ -898,7 +1190,6 @@ try {
     if (lastExercisePayload) renderResults(lastExercisePayload, lastGhost);
   };
 
-  // exercise sliders
   exHoldSlider.oninput = () => {
     exHoldMs = Number(exHoldSlider.value);
     localStorage.setItem("vtp_exHoldMs", String(exHoldMs));
@@ -915,10 +1206,9 @@ try {
     exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
   };
 
-  // modes
   const renderTrainMode = () => {
-    modeAssistBtn.classList.toggle("primary", trainMode === "assist");
-    modeChallengeBtn.classList.toggle("primary", trainMode === "challenge");
+    modeAssistBtn.classList.toggle("active", trainMode === "assist");
+    modeChallengeBtn.classList.toggle("active", trainMode === "challenge");
   };
   modeAssistBtn.onclick = () => {
     trainMode = "assist";
@@ -933,8 +1223,8 @@ try {
   renderTrainMode();
 
   const renderRingMode = () => {
-    ringLiveBtn.classList.toggle("primary", ringMode === "live");
-    ringScoreBtn.classList.toggle("primary", ringMode === "score");
+    ringLiveBtn.classList.toggle("active", ringMode === "live");
+    ringScoreBtn.classList.toggle("active", ringMode === "score");
   };
   ringLiveBtn.onclick = () => {
     ringMode = "live";
@@ -950,7 +1240,6 @@ try {
   };
   renderRingMode();
 
-  // note selects
   const OCT = [2, 3, 4, 5];
   selNote.innerHTML = NOTE_NAMES.map((n) => `<option value="${n}">${n}</option>`).join("");
   selOct.innerHTML = OCT.map((o) => `<option value="${o}">${o}</option>`).join("");
@@ -959,11 +1248,11 @@ try {
     const n = midiToNote(rootMidiUser);
     rootNotePill.textContent = `${n.name}${n.octave}`;
     octPill.textContent = `Oct ${n.octave}`;
-    rootHzLabel.textContent = `${midiToHz(rootMidiUser).toFixed(1)} Hz`;
+    rootHzLabel.textContent = fmtHz(midiToHz(rootMidiUser));
 
     selNote.value = n.name;
     selOct.value = String(n.octave);
-    noteMeta.textContent = `${n.ru} (${n.name}${n.octave}) ${midiToHz(rootMidiUser).toFixed(1)} Hz`;
+    noteMeta.textContent = `${n.ru} (${n.name}${n.octave}) ${fmtHz(midiToHz(rootMidiUser))}`;
   }
 
   selNote.onchange = () => {
@@ -997,13 +1286,11 @@ try {
   btnOctDown.onclick = () => changeRoot(-12);
   btnOctUp.onclick = () => changeRoot(+12);
 
-  // exercise select
   selExercise.innerHTML = EXERCISES.map((e) => `<option value="${e.id}">${e.title[LANG]}</option>`).join("");
   const exIdSaved = localStorage.getItem("vtp_exId") ?? "single";
   selExercise.value = getExerciseById(exIdSaved).id;
   selExercise.onchange = () => localStorage.setItem("vtp_exId", selExercise.value);
 
-  // marker
   const setMarkerCents = (cents: number | null) => {
     if (cents === null) {
       marker.style.opacity = "0";
@@ -1011,12 +1298,11 @@ try {
       return;
     }
     const c = clamp(cents, -BAR_RANGE, BAR_RANGE);
-    const tt = (c + BAR_RANGE) / (2 * BAR_RANGE);
+    const tt0 = (c + BAR_RANGE) / (2 * BAR_RANGE);
     marker.style.opacity = "1";
-    marker.style.left = `${tt * 100}%`;
+    marker.style.left = `${tt0 * 100}%`;
   };
 
-  // ring
   const setRing = (fill01: number, errFill01: number, errPct: number | null) => {
     const CIRC_IN = 263.89;
     const CIRC_OUT = 289.03;
@@ -1042,37 +1328,40 @@ try {
     }
   };
 
-  // results actions
   btnResCopy.onclick = async () => {
     if (!lastExercisePayload) return;
     await navigator.clipboard.writeText(JSON.stringify(lastExercisePayload, null, 2));
-    setHint("Copied.", 900);
+    setHint(t("copied"), 900);
   };
   btnResDownload.onclick = () => {
     if (!lastExercisePayload) return;
     const blob = new Blob([JSON.stringify(lastExercisePayload, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const dt = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt).replace(/[^\d]/g, "") : "result";
+    const dt0 = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt).replace(/[^\d]/g, "") : "result";
     a.href = url;
-    a.download = `exercise_${lastExercisePayload.exercise_id}_${dt}.json`;
+    a.download = `exercise_${lastExercisePayload.exercise_id}_${dt0}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
   btnResShare.onclick = async () => {
-    const dt = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt) : "";
+    const dt0 = lastExerciseFinishedAt ? formatDt(lastExerciseFinishedAt) : "";
     const score = lastExercisePayload?.score_total ?? "—";
     const timeS = lastExercisePayload?.total_time_ms ? Math.round(lastExercisePayload.total_time_ms / 1000) : "—";
-    const text = `${lastExerciseTitle}. ${dt}\nscore: ${score}%\ntime: ${timeS}s`;
+    const unitS = LANG === "ru" ? "с" : "s";
+    const text = LANG === "ru"
+      ? `${lastExerciseTitle}. ${dt0}\n${t("results_score")}: ${score}%\n${t("results_time")}: ${timeS}${unitS}`
+      : `${lastExerciseTitle}. ${dt0}\n${t("results_score")}: ${score}%\n${t("results_time")}: ${timeS}${unitS}`;
+
     // @ts-ignore
     if (navigator.share) {
       try {
         // @ts-ignore
-        await navigator.share({ text, title: "Voice Trainer" });
+        await navigator.share({ text, title: t("app_title") });
       } catch {}
     } else {
       await navigator.clipboard.writeText(text);
-      setHint("Share text copied.", 1200);
+      setHint(t("share_copied"), 1200);
     }
   };
 
@@ -1115,7 +1404,6 @@ try {
     const xScale = (tms: number) => x0 + (tms / tMax) * (x1 - x0);
     const yScale = (midi: number) => y0 + ((yMax - midi) / Math.max(1e-6, yMax - yMin)) * (y1 - y0);
 
-    // grid
     ctx.strokeStyle = grid;
     ctx.lineWidth = 1;
     for (let i = 0; i <= 4; i++) {
@@ -1126,7 +1414,6 @@ try {
       ctx.stroke();
     }
 
-    // green band
     const tolCents = 1200 * Math.log2(1 + tolPct / 100);
     const tolSemi = tolCents / 100;
 
@@ -1146,7 +1433,6 @@ try {
     ctx.closePath();
     ctx.fill();
 
-    // step separators
     ctx.strokeStyle = sep;
     ctx.lineWidth = 1;
     for (let i = 1; i < trace.length; i++) {
@@ -1159,7 +1445,6 @@ try {
       }
     }
 
-    // target
     ctx.strokeStyle = "rgba(52,211,153,.75)";
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -1171,7 +1456,6 @@ try {
     }
     ctx.stroke();
 
-    // ghost
     if (ghost && Array.isArray(ghost.trace) && ghost.trace.length > 2) {
       const gTrace = ghost.trace as any[];
       const gTMax = Math.max(...gTrace.map((p) => p.t_ms ?? 0), 1);
@@ -1187,7 +1471,6 @@ try {
       ctx.stroke();
     }
 
-    // current (EMA)
     ctx.strokeStyle = "rgba(96,165,250,.95)";
     ctx.lineWidth = 3;
     let sm: number | null = null;
@@ -1202,7 +1485,6 @@ try {
     }
     ctx.stroke();
 
-    // legend
     const lx = x1 - 168;
     const ly = y0 + 10;
     ctx.font = "12px ui-sans-serif";
@@ -1223,7 +1505,6 @@ try {
     ctx.beginPath(); ctx.moveTo(lx, ly + 32); ctx.lineTo(lx + 22, ly + 32); ctx.stroke();
     ctx.fillText(t("legend_ghost"), lx + 28, ly + 36);
 
-    // y labels
     ctx.fillStyle = label;
     ctx.font = "12px ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
     ctx.fillText(String(yMax.toFixed(1)), 8, y0 + 10);
@@ -1241,19 +1522,33 @@ try {
     const timeS = payload.total_time_ms ? Math.round(payload.total_time_ms / 1000) : "—";
     const avgT2g = payload.avg_time_to_green_ms ? Math.round(payload.avg_time_to_green_ms) : null;
 
-    resultsMeta.textContent = `score: ${score}% • time: ${timeS}s` + (avgT2g !== null ? ` • avg time-to-green: ${avgT2g}ms` : "");
+    resultsMeta.textContent =
+      `${t("results_score")}: ${score}% • ${t("results_time")}: ${timeS}${LANG === "ru" ? "с" : "s"}` +
+      (avgT2g !== null ? ` • ${t("results_avg_t2g")}: ${avgT2g}ms` : "");
+
+    const th = (label: string, tip: string) =>
+      `<th><span class="thTip" tabindex="0" data-tip="${tip}">${label}</span></th>`;
 
     const head = `
       <tr>
-        <th>Step</th><th>Note</th><th>T2G</th><th>Green</th><th>%</th><th>Med</th><th>P95</th><th>Corr</th><th>Drift</th>
+        ${th(t("col_step"), t("tip_col_step"))}
+        ${th(t("col_note"), t("tip_col_note"))}
+        ${th(t("col_t2g"), t("tip_col_t2g"))}
+        ${th(t("col_green"), t("tip_col_green"))}
+        ${th(t("col_pct"), t("tip_col_pct"))}
+        ${th(t("col_med"), t("tip_col_med"))}
+        ${th(t("col_p95"), t("tip_col_p95"))}
+        ${th(t("col_corr"), t("tip_col_corr"))}
+        ${th(t("col_drift"), t("tip_col_drift"))}
       </tr>
     `;
+
     const rows = steps.map((s) => {
       const n = midiToNote(s.target_midi);
       const noteLabel = `${n.name}${n.octave}`;
       const t2g = s.time_to_green_ms === null ? "—" : String(Math.round(s.time_to_green_ms));
       const drift = s.drift_cents_per_s === null ? "—" : s.drift_cents_per_s.toFixed(2);
-      const med = s.median_abs_cents === null ? "—" : s.median_abs_cents.toFixed(1);
+      const med0 = s.median_abs_cents === null ? "—" : s.median_abs_cents.toFixed(1);
       const p = s.p95_abs_cents === null ? "—" : s.p95_abs_cents.toFixed(1);
       return `<tr>
         <td class="smallMono">${s.step_index + 1}</td>
@@ -1261,7 +1556,7 @@ try {
         <td class="smallMono">${t2g}</td>
         <td class="smallMono">${Math.round(s.time_in_green_ms)}</td>
         <td class="smallMono">${s.pct_in_green.toFixed(0)}%</td>
-        <td class="smallMono">${med}</td>
+        <td class="smallMono">${med0}</td>
         <td class="smallMono">${p}</td>
         <td class="smallMono">${s.correction_count}</td>
         <td class="smallMono">${drift}</td>
@@ -1357,7 +1652,6 @@ try {
       stop_reason: reason,
     };
 
-    // ghost: load previous before saving new
     const prevGhost = loadGhostPack(payload.exercise_id);
     lastGhost = (prevGhost && isGhostCompatible(prevGhost, payload)) ? prevGhost : null;
 
@@ -1365,13 +1659,13 @@ try {
     lastExerciseTitle = exDef?.title?.[LANG] ?? payload.exercise_id;
     lastExerciseFinishedAt = new Date();
 
-    badgeSave.textContent = "Save: saving…";
+    badgeSave.textContent = `${t("label_saved")}: …`;
     try {
       const res = await saveExerciseAttempt(payload);
-      badgeSave.textContent = `Save: id=${res.id}`;
+      badgeSave.textContent = `${t("label_saved")}: id=${res.id}`;
       setHint(`${t("saved")}: ${lastExerciseTitle}`, 2000);
     } catch (e) {
-      badgeSave.textContent = "Save: error";
+      badgeSave.textContent = `${t("label_saved")}: ${LANG === "ru" ? "ошибка" : "error"}`;
       setHint(`${t("save_error")}: ${String(e)}`, 7000);
     }
 
@@ -1393,7 +1687,7 @@ try {
       requestAnimationFrame(rafLoop);
       return true;
     } catch (e) {
-      setHint(`Mic error: ${String(e)}`, 7000);
+      setHint(t("mic_error") + String(e), 7000);
       running = false;
       return false;
     }
@@ -1418,9 +1712,7 @@ try {
     exLastTraceAt = 0;
     exStartedAt = nowMs();
 
-    badgeSave.textContent = "Save: —";
-    badgeState.textContent = "Status: exercise";
-
+    badgeSave.textContent = `${t("label_saved")}: —`;
     exStartStep(0);
   }
 
@@ -1441,23 +1733,27 @@ try {
     if (!ok) return;
     exStart();
   };
-  btnStop.onclick = () => exStop("stopped");
 
-  // init
+  btnStop.onclick = () => {
+    btnStop.classList.add("flashStop");
+    setTimeout(() => btnStop.classList.remove("flashStop"), 220);
+    exStop("stopped");
+  };
+
   setRuntimeTargetMidi(rootMidiUser);
   syncRootUI();
 
-  // success marker/ring UI
   setMarkerCents(null);
 
-  // draw results trace on theme/tol changes
   tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
   exHoldMeta.textContent = `${Math.round(exHoldMs)} ms`;
   exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ms`;
   exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
 
-  // updateUI
   const updateUI = () => {
+    btnStart.classList.toggle("active", exActive);
+    btnStop.disabled = !running && !exActive;
+
     subTitle.textContent = `${trainMode.toUpperCase()} • ${ringMode.toUpperCase()} • ±${tolPct.toFixed(1)}%`;
 
     indMic.classList.toggle("on-mic", running && engine.isMicReady());
@@ -1465,35 +1761,39 @@ try {
 
     tipPhones.style.display = trainMode === "assist" && engine.isReferencePlaying() ? "block" : "none";
 
-    badgeState.textContent = exActive ? "Status: exercise" : (running ? "Status: idle (mic on)" : "Status: idle");
+    const statusText =
+      exActive ? t("status_exercise") : (running ? t("status_idle_mic") : t("status_idle"));
+    badgeState.textContent = `${t("label_status")}: ${statusText}`;
 
-    stRoot.textContent = `Root: ${midiToNote(rootMidiUser).name}${midiToNote(rootMidiUser).octave}`;
-    stMic.textContent = (running && engine.isMicReady()) ? "on" : "off";
-    stRef.textContent = engine.isReferencePlaying() ? "on" : "off";
+    stRoot.textContent = `${t("label_root")}: ${midiToNote(rootMidiUser).name}${midiToNote(rootMidiUser).octave}`;
+    stMic.textContent = (running && engine.isMicReady()) ? t("on") : t("off");
+    stRef.textContent = engine.isReferencePlaying() ? t("on") : t("off");
 
     if (exActive && exDef) {
       stExSep.style.display = "inline";
       stEx.style.display = "inline";
-      stEx.textContent = `EX: ${exDef.id} ${exStepIdx + 1}/${exTargets.length}`;
+      stEx.textContent = `${t("label_ex")}: ${exDef.id} ${exStepIdx + 1}/${exTargets.length}`;
     } else {
       stExSep.style.display = "none";
       stEx.style.display = "none";
       stEx.textContent = "";
     }
 
-    micMeta.textContent =
-      `rms: ${lastFrame.rms.toFixed(3)} • clarity: ${(lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2)} • ` +
-      `noise: ${noiseRms.toFixed(4)} • snr: ${snrDbDisp.toFixed(1)} dB • keep: ${energyKeepDisp ? "yes" : "no"}`;
-
-    targetHzBig.textContent = `${targetHz.toFixed(1)} Hz`;
+    micMeta.textContent = formatTemplate(t("mic_meta"), {
+      rms: lastFrame.rms.toFixed(3),
+      clarity: (lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2),
+      noise: noiseRms.toFixed(4),
+      snr: snrDbDisp.toFixed(1),
+      keep: energyKeepDisp ? t("keep_yes") : t("keep_no"),
+    });
 
     const n = midiToNote(targetMidi);
-    targetLine.textContent = LANG === "ru" ? `Нота ${n.ru} (${n.name}${n.octave})` : `Note ${n.name}${n.octave}`;
-    noteRu.textContent = n.ru;
+    const smallName = LANG === "ru" ? n.ru : n.name;
+    noteRu.textContent = `${smallName} (${fmtHz(targetHz)})`;
     noteBig.textContent = `${n.name}${n.octave}`;
 
     if (!running || !engine.isMicReady()) {
-      hzBig.textContent = "— Hz";
+      hzBig.textContent = `— ${t("unit_hz")}`;
       delta.textContent = "—%";
       setMarkerCents(null);
       setRing(ringFill, ringErrFill, null);
@@ -1502,7 +1802,7 @@ try {
     }
 
     if (hzDisp === null || ratioDisp === null) {
-      hzBig.textContent = "— Hz";
+      hzBig.textContent = `— ${t("unit_hz")}`;
       delta.textContent = "—%";
       setMarkerCents(null);
       setRing(ringFill, ringErrFill, null);
@@ -1512,21 +1812,19 @@ try {
     const pct = ratioDisp * 100;
     const errPct = (ratioDisp - 1) * 100;
 
-    hzBig.textContent = `${hzDisp.toFixed(1)} Hz`;
+    hzBig.textContent = fmtHz(hzDisp);
     delta.textContent = `${pct.toFixed(1)}%`;
 
     setMarkerCents(centsHold);
     setRing(ringFill, ringErrFill, errPct);
   };
 
-  // rafLoop
   const rafLoop = () => {
     if (!running) return;
 
     const fr = engine.frame(targetHz);
     const tNow = nowMs();
 
-    // EQ
     const spec = engine.getSpectrumBars(18);
     for (let i = 0; i < 18; i++) {
       eqVals[i] = eqVals[i] * 0.75 + spec[i] * 0.25;
@@ -1534,7 +1832,6 @@ try {
       eqBars[i].style.height = `${h}px`;
     }
 
-    // strict pitch
     const pitchOk = fr.hz !== null && fr.hz >= MIN_HZ && fr.hz <= MAX_HZ;
     const notMuted = !engine.isMicMuted();
 
@@ -1548,7 +1845,6 @@ try {
 
     if (hasPitchRaw) recentRealPitchAt = tNow;
 
-    // noise learning
     const snrPre = fr.rms / Math.max(1e-6, noiseRms);
     const learnNoise = !gateOn && snrPre < SNR_ON;
     if (learnNoise) {
@@ -1605,7 +1901,6 @@ try {
       }
     }
 
-    // sample @ 20fps
     if (tNow - lastSampleTs >= SAMPLE_MS) {
       lastSampleTs = tNow;
 
@@ -1637,7 +1932,6 @@ try {
         hzDisp = ema(hzDisp, medHz, a);
         ratioDisp = ema(ratioDisp, medRatio, a);
 
-        // ring fills
         const fillTarget = clamp(ratioDisp!, 0, 1);
         ringFill = ema(ringFill, fillTarget, getRingAlpha());
 
@@ -1652,7 +1946,6 @@ try {
 
         lastStableAt = tNow;
 
-        // --- SUCCESS feedback (beep + flash) ---
         if (Math.abs(medErrPct) <= tolPct) inTuneMs += SAMPLE_MS;
         else inTuneMs = Math.max(0, inTuneMs - SAMPLE_MS * 2);
 
@@ -1662,7 +1955,6 @@ try {
           flashSuccess();
         }
 
-        // --- Exercise update ---
         if (exActive && exDef) {
           if (tNow - exStartedAt >= exTotalMaxMs) {
             exSteps.push(exFinalizeStep());
@@ -1735,7 +2027,6 @@ try {
           }
         }
       } else {
-        // graceful decay
         const withinGrace =
           gateOn && (energyKeep ? tNow - lastGoodAt <= HOLD_WHILE_ENERGY_MS : tNow - lastGoodAt <= DROPOUT_HOLD_MS);
         const recentlyStable = tNow - lastStableAt <= (energyKeep ? HOLD_WHILE_ENERGY_MS : DROPOUT_HOLD_MS);
@@ -1762,10 +2053,7 @@ try {
     requestAnimationFrame(rafLoop);
   };
 
-  // periodic UI update
   setInterval(updateUI, 140);
-
-  // initial hint
   setHint(t("hint_start"), 0);
 } catch (e) {
   showCrash("BOOT ERROR:", e);
