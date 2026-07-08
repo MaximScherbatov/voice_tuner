@@ -1,5 +1,5 @@
 export type Lang = "ru" | "en";
-export type ExerciseKind = "single" | "arpeggio" | "scale" | "sequence";
+export type ExerciseKind = "single" | "arpeggio" | "scale" | "sequence" | "melody";
 
 export type ExerciseDef = {
   id: string;
@@ -9,11 +9,14 @@ export type ExerciseDef = {
   // semitone offsets from root (root = 0)
   patternSemis: number[];
 
-  // defaults for Flow mode
-  defaultHoldMs: number;        // how long to stay in green to auto-advance
-  defaultMaxStepMs: number;     // timeout to force-advance (avoid deadlock)
+  // Flow defaults (legacy)
+  defaultHoldMs: number;
+  defaultMaxStepMs: number;
   defaultTransposeCount: number;
-  defaultTransposeStep: number; // semitones per transposition
+  defaultTransposeStep: number;
+
+  // Tempo for melodies (note duration)
+  tempoMs?: number;
 };
 
 export const EXERCISES: ExerciseDef[] = [
@@ -23,12 +26,12 @@ export const EXERCISES: ExerciseDef[] = [
     kind: "single",
     patternSemis: [0],
     defaultHoldMs: 0,
-    defaultMaxStepMs: 60000, // 60s session by default
+    defaultMaxStepMs: 60000, // session length
     defaultTransposeCount: 1,
     defaultTransposeStep: 0,
   },
 
-  // ---- Core (existing) ----
+  // ---- Core (flow) ----
   {
     id: "arp_maj_oct",
     title: { ru: "Арпеджио мажор 1-3-5-8-5-3-1", en: "Major arpeggio 1-3-5-8-5-3-1" },
@@ -60,51 +63,45 @@ export const EXERCISES: ExerciseDef[] = [
     defaultTransposeStep: 1,
   },
 
-  // ---- Melodic / motif exercises (new) ----
-
-  // 1-3-5-4-3-2-1 (often used as a “zing/zing/zah” style vocalise)
+  // ---- Melodic (tempo: play full phrase, then sing full phrase) ----
   {
     id: "mel_1354321",
-    title: {
-      ru: "Мелодия 1-3-5-4-3-2-1",
-      en: "Melody 1-3-5-4-3-2-1",
-    },
-    kind: "sequence",
+    title: { ru: "Мелодия 1-3-5-4-3-2-1", en: "Melody 1-3-5-4-3-2-1" },
+    kind: "melody",
     patternSemis: [0, 4, 7, 5, 4, 2, 0],
-    defaultHoldMs: 1100,
-    defaultMaxStepMs: 4500,
+    defaultHoldMs: 0,
+    defaultMaxStepMs: 0,
     defaultTransposeCount: 8,
     defaultTransposeStep: 1,
+    tempoMs: 420,
   },
-
-  // “Ladder”: 1-3-2-4-3-5-4-6-5-7-6-8 (very musical; trains quick retargeting)
   {
     id: "mel_ladder_132435465768",
     title: {
       ru: "Мелодия лесенка 1-3-2-4-3-5-4-6-5-7-6-8",
       en: "Melody ladder 1-3-2-4-3-5-4-6-5-7-6-8",
     },
-    kind: "sequence",
+    kind: "melody",
     patternSemis: [0, 4, 2, 5, 4, 7, 5, 9, 7, 11, 9, 12],
-    defaultHoldMs: 900,
-    defaultMaxStepMs: 4000,
+    defaultHoldMs: 0,
+    defaultMaxStepMs: 0,
     defaultTransposeCount: 6,
     defaultTransposeStep: 1,
+    tempoMs: 380,
   },
-
-  // “Bounce”: 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1 (fun + trains agility)
   {
     id: "mel_bounce_121212345454321",
     title: {
       ru: "Мелодия пружинка 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
       en: "Melody bounce 1-2-1-2-1-2-3-4-5-4-5-4-3-2-1",
     },
-    kind: "sequence",
+    kind: "melody",
     patternSemis: [0, 2, 0, 2, 0, 2, 4, 5, 7, 5, 7, 5, 4, 2, 0],
-    defaultHoldMs: 800,
-    defaultMaxStepMs: 3500,
+    defaultHoldMs: 0,
+    defaultMaxStepMs: 0,
     defaultTransposeCount: 6,
     defaultTransposeStep: 1,
+    tempoMs: 360,
   },
 ];
 
