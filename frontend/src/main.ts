@@ -511,6 +511,9 @@ const ICONS = {
   globe: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 .001 20.001A10 10 0 0 0 12 2Zm7.93 9h-3.16a15.8 15.8 0 0 0-1.2-5.02A8.02 8.02 0 0 1 19.93 11ZM12 4c.9 1.23 1.66 3.3 2.07 7H9.93C10.34 7.3 11.1 5.23 12 4ZM4.07 13h3.16c.2 1.78.65 3.53 1.2 5.02A8.02 8.02 0 0 1 4.07 13Zm3.16-2H4.07a8.02 8.02 0 0 1 4.36-5.02A15.8 15.8 0 0 0 7.23 11Zm2.7 2h4.14c-.41 3.7-1.17 5.77-2.07 7-.9-1.23-1.66-3.3-2.07-7Zm6.84 0h3.16a8.02 8.02 0 0 1-4.36 5.02c.55-1.49 1-3.24 1.2-5.02Z"/></svg>`,
   sun: `<svg class="ico" viewBox="0 0 24 24"><path d="M6.76 4.84 5.35 3.43 3.93 4.85l1.41 1.41 1.42-1.42ZM12 4V1h-1v3h1Zm7.07.85-1.42-1.42-1.41 1.41 1.41 1.41 1.42-1.38ZM20 13h3v-1h-3v1ZM12 23v-3h-1v3h1Zm-8-10H1v-1h3v1Zm15.66 6.24 1.41 1.41 1.42-1.42-1.41-1.41-1.42 1.42ZM4.85 20.07l1.41-1.41-1.42-1.42-1.41 1.41 1.42 1.42ZM12 6a6 6 0 1 0 0 12 6 6 0 0 0 0-12Z"/></svg>`,
   moon: `<svg class="ico" viewBox="0 0 24 24"><path d="M21 14.5A8.5 8.5 0 0 1 9.5 3a7 7 0 1 0 11.5 11.5Z"/></svg>`,
+
+  headphones: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h3v-8H5v-3a7 7 0 0 1 14 0v3h-3v8h3a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9Z"/></svg>`,
+  timer: `<svg class="ico" viewBox="0 0 24 24"><path d="M9 1h6v2H9V1Zm3 4a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm0 16a7 7 0 1 1 7-7 7 7 0 0 1-7 7Zm.5-11H11v5l4.3 2.6.7-1.2-3.5-2.1V10Z"/></svg>`,
 };
 
 try {
@@ -769,10 +772,10 @@ try {
         </div>
 
         <button class="iconBtn ledGreen" id="modeAssist" data-tip="${t("tip_mode_assist")}">
-          <span class="modeIco">∞</span><span class="lbl">${t("assist")}</span>
+          <span class="modeIco">${ICONS.headphones}</span><span class="lbl">${t("assist")}</span>
         </button>
         <button class="iconBtn ledBlue" id="modeChallenge" data-tip="${t("tip_mode_challenge")}">
-          <span class="modeIco">⏱</span><span class="lbl">${t("challenge")}</span>
+          <span class="modeIco">${ICONS.timer}</span><span class="lbl">${t("challenge")}</span>
         </button>
       </div>
 
