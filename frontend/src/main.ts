@@ -647,6 +647,18 @@ try {
   let exTargets: number[] = [];
   let exStepIdx = 0;
 
+  type ExPhase = "flow" | "listen" | "sing" | "loop";
+  let exPhase: ExPhase = "flow";
+  let exPhaseStart = 0;
+  let exTempoMs = 420;
+  let exCycleMs = 0;
+  let exLastStepIdx = -1;
+
+  // for ASSIST loop: keep last completed full cycle to save on STOP
+  let lastCycleSteps: StepMetric[] | null = null;
+  let lastCycleTrace: TracePoint[] | null = null;
+  let lastCycleAbsCents: number[] | null = null;
+
   let exStartedAt = 0;
   let exTotalMaxMs = 0;
   let exStepStartedAt = 0;
@@ -707,6 +719,19 @@ try {
     belowEnergySince = 0;
 
     recentRealPitchAt = 0;
+  }
+
+  function resetPitchWindowOnly() {
+    win = [];
+    hzDisp = null;
+    ratioDisp = null;
+    ringFill = 0;
+    ringErrFill = 0;
+
+    lastStableAt = 0;
+    lastGoodSample = null;
+    centsHold = null;
+    inTuneMs = 0;
   }
 
   function exResetStepAccumulators() {
@@ -1630,8 +1655,8 @@ try {
     };
   }
 
-  async function exFinish(reason: string) {
-    const totalTime = nowMs() - exStartedAt;
+  async function exFinish(reason: string, totalTimeOverrideMs: number | null = null) {
+    const totalTime = totalTimeOverrideMs ?? (nowMs() - exStartedAt);
 
     exActive = false;
     engine.stopReference();
@@ -1649,12 +1674,21 @@ try {
       let scoreSum = 0;
       let n = 0;
       for (const s of steps) {
-        const holdScore = exDef?.kind === "single"
-          ? clamp((s.pct_in_green ?? 0) / 100, 0, 1)
-          : clamp((s.time_in_green_ms ?? 0) / Math.max(1, exHoldMs), 0, 1);
+        const holdScore =
+          exDef?.kind === "single"
+            ? clamp((s.pct_in_green ?? 0) / 100, 0, 1)
+            : exDef?.kind === "melody"
+              ? clamp((s.time_in_green_ms ?? 0) / Math.max(1, exTempoMs), 0, 1)
+              : clamp((s.time_in_green_ms ?? 0) / Math.max(1, exHoldMs), 0, 1);
 
         const acc = s.median_abs_cents === null ? 0 : clamp(1 - s.median_abs_cents / 50, 0, 1);
-        const speed = s.time_to_green_ms === null ? 0 : clamp(1 - s.time_to_green_ms / Math.max(600, exMaxStepMs * 0.6), 0, 1);
+
+        const speedDen = exDef?.kind === "melody"
+          ? Math.max(350, exTempoMs)
+          : Math.max(600, exMaxStepMs * 0.6);
+
+        const speed =
+          s.time_to_green_ms === null ? 0 : clamp(1 - s.time_to_green_ms / speedDen, 0, 1);
 
         scoreSum += 100 * (0.5 * holdScore + 0.3 * acc + 0.2 * speed);
         n += 1;
@@ -1665,7 +1699,7 @@ try {
     const payload = {
       exercise_id: exDef?.id ?? "unknown",
       mode: trainMode,
-      timing_mode: "flow",
+      timing_mode: exDef?.kind === "melody" ? "tempo" : "flow",
       total_time_ms: Math.round(totalTime),
       score_total: Math.round(scoreTotal * 10) / 10,
       avg_time_to_green_ms: t2g.length ? t2g.reduce((a, b) => a + b, 0) / t2g.length : null,
@@ -1730,15 +1764,50 @@ try {
       exTotalMaxMs = Math.min(10 * 60 * 1000, exTargets.length * exMaxStepMs + 3000);
     }
 
+    // phase init
+    exPhase = "flow";
+    exPhaseStart = nowMs();
+    exTempoMs = 420;
+    exCycleMs = 0;
+    exLastStepIdx = -1;
+
+    lastCycleSteps = null;
+    lastCycleTrace = null;
+    lastCycleAbsCents = null;
+
     exActive = true;
     exSteps = [];
     exTrace = [];
     exAbsCentsAllExercise = [];
     exLastTraceAt = 0;
+
     exStartedAt = nowMs();
 
     badgeSave.textContent = `${t("label_saved")}: —`;
-    exStartStep(0);
+
+    // --- melody mode: time-driven (call&response / loop) ---
+    if (exDef.kind === "melody") {
+      exTempoMs = clamp(exDef.tempoMs ?? 420, 180, 2000);
+      exCycleMs = exTargets.length * exTempoMs;
+
+      if (trainMode === "challenge") {
+        exPhase = "listen"; // reference only
+      } else {
+        exPhase = "loop";   // continuous loop
+      }
+
+      exPhaseStart = nowMs();
+      exLastStepIdx = -1;
+
+      // init first target for reference
+      setRuntimeTargetMidi(exTargets[0]);
+      resetPitchWindowOnly();
+      applyAudioSettings();
+
+      if (exPhase === "listen" || exPhase === "loop") engine.startReference(targetHz);
+    } else {
+      exStartStep(0);
+    }
   }
 
   function exStop(reason = "stopped") {
@@ -1748,6 +1817,27 @@ try {
       engine.stopMic();
       return;
     }
+
+    // melody stop rules
+    if (exDef && exDef.kind === "melody") {
+      // ASSIST loop: save last completed full cycle if we have it
+      if (exPhase === "loop" && lastCycleSteps && lastCycleTrace && lastCycleAbsCents) {
+        exSteps = lastCycleSteps.slice();
+        exTrace = lastCycleTrace.slice();
+        exAbsCentsAllExercise = lastCycleAbsCents.slice();
+        exFinish(reason, exCycleMs).catch(() => {});
+        return;
+      }
+
+      // CHALLENGE sing (or partial loop with no full cycle yet): finalize current step if any
+      if ((exPhase === "sing" || exPhase === "loop") && exLastStepIdx >= 0) {
+        exSteps.push(exFinalizeStep());
+      }
+      exFinish(reason).catch(() => {});
+      return;
+    }
+
+    // flow/single (legacy)
     exSteps.push(exFinalizeStep());
     exFinish(reason).catch(() => {});
   }
@@ -1853,8 +1943,85 @@ try {
   const rafLoop = () => {
     if (!running) return;
 
-    const fr = engine.frame(targetHz);
     const tNow = nowMs();
+
+    // --- MELODY: time-driven steps (call&response / loop), update target BEFORE frame() ---
+    if (exActive && exDef && exDef.kind === "melody") {
+      const nSteps = exTargets.length;
+
+      // phase transitions / loop cycle wrap
+      if (exPhase === "loop") {
+        const tRel = tNow - exPhaseStart;
+        if (exCycleMs > 0 && tRel >= exCycleMs) {
+          if (exLastStepIdx >= 0) exSteps.push(exFinalizeStep());
+
+          if (exSteps.length === nSteps) {
+            lastCycleSteps = exSteps.slice();
+            lastCycleTrace = exTrace.slice();
+            lastCycleAbsCents = exAbsCentsAllExercise.slice();
+          }
+
+          // start next cycle
+          exPhaseStart = tNow;
+          exStartedAt = tNow;
+          exSteps = [];
+          exTrace = [];
+          exAbsCentsAllExercise = [];
+          exLastTraceAt = 0;
+          exLastStepIdx = -1;
+          resetPitchWindowOnly();
+        }
+      } else if (exPhase === "listen") {
+        const tRel = tNow - exPhaseStart;
+        if (exCycleMs > 0 && tRel >= exCycleMs) {
+          exPhase = "sing";
+          exPhaseStart = tNow;
+
+          // start scoring timeline from sing
+          exStartedAt = tNow;
+          exSteps = [];
+          exTrace = [];
+          exAbsCentsAllExercise = [];
+          exLastTraceAt = 0;
+          exLastStepIdx = -1;
+
+          resetPitchWindowOnly();
+          engine.stopReference();
+        }
+      } else if (exPhase === "sing") {
+        const tRel = tNow - exPhaseStart;
+        if (exCycleMs > 0 && tRel >= exCycleMs) {
+          if (exLastStepIdx >= 0) exSteps.push(exFinalizeStep());
+          exFinish("completed_melody", exCycleMs).catch(() => {});
+        }
+      }
+
+      // pick current step by time (clamped within cycle)
+      const tRel2 = tNow - exPhaseStart;
+      const idxStep = clamp(Math.floor(tRel2 / Math.max(1, exTempoMs)), 0, Math.max(0, nSteps - 1));
+
+      if (idxStep !== exLastStepIdx && nSteps > 0) {
+        // finalize previous step only in scoring phases
+        if ((exPhase === "sing" || exPhase === "loop") && exLastStepIdx >= 0) {
+          exSteps.push(exFinalizeStep());
+        }
+
+        exLastStepIdx = idxStep;
+        exStepIdx = idxStep;
+        exStepStartedAt = tNow;
+        exResetStepAccumulators();
+
+        setRuntimeTargetMidi(exTargets[idxStep]);
+        resetPitchWindowOnly();
+
+        // reference active in listen/loop
+        if (exPhase === "listen" || exPhase === "loop") {
+          engine.startReference(targetHz);
+        }
+      }
+    }
+
+    const fr = engine.frame(targetHz);
 
     const spec = engine.getSpectrumBars(18);
     for (let i = 0; i < 18; i++) {
@@ -1986,7 +2153,7 @@ try {
           flashSuccess();
         }
 
-        if (exActive && exDef) {
+        if (exActive && exDef && exDef.kind !== "melody") {
           if (tNow - exStartedAt >= exTotalMaxMs) {
             exSteps.push(exFinalizeStep());
             exFinish("timeout_total").catch(() => {});
@@ -2054,6 +2221,61 @@ try {
               const isLast = exStepIdx >= exTargets.length - 1;
               if (isLast) exFinish(heldEnough ? "completed" : "timeout_step").catch(() => {});
               else exStartStep(exStepIdx + 1);
+            }
+          }
+        }
+
+        // --- MELODY scoring (only in sing/loop; not in listen) ---
+        if (exActive && exDef && exDef.kind === "melody" && (exPhase === "sing" || exPhase === "loop")) {
+          const realRecent = tNow - recentRealPitchAt <= 220;
+          const tolCents = 1200 * Math.log2(1 + tolPct / 100);
+
+          const inGreen = realRecent && fr.cents !== null && Math.abs(fr.cents) <= tolCents;
+
+          if (inGreen) {
+            exGreenConfirmMs += SAMPLE_MS;
+            exTimeInGreenMs += SAMPLE_MS;
+          } else {
+            exGreenConfirmMs = 0;
+          }
+
+          if (exTimeToGreenMs === null && exGreenConfirmMs >= EX_CONFIRM_MS) {
+            exTimeToGreenMs = Math.max(0, Math.round(tNow - exStepStartedAt - exGreenConfirmMs + EX_CONFIRM_MS));
+          }
+
+          if (realRecent && fr.cents !== null) {
+            const absC = Math.abs(fr.cents);
+            exAbsCentsStepAll.push(absC);
+            exAbsCentsAllExercise.push(absC);
+            if (exTimeToGreenMs !== null) exAbsCentsStepStable.push(absC);
+
+            exClaritySum += fr.clarity;
+            exRmsSum += fr.rms;
+            exFrames += 1;
+
+            if (exTimeToGreenMs === null) {
+              exOvershootMax = Math.max(exOvershootMax, absC);
+              const sign = (fr.cents > 1e-3 ? 1 : fr.cents < -1e-3 ? -1 : 0) as -1 | 0 | 1;
+              if (sign !== 0) {
+                if (exPrevSign !== null && exPrevSign !== 0 && exPrevSign !== sign) exCorrectionCount += 1;
+                exPrevSign = sign;
+              }
+            } else {
+              exDriftSeries.push({ t: tNow - exStepStartedAt, cents: fr.cents });
+            }
+
+            if (tNow - exLastTraceAt >= EX_TRACE_PERIOD_MS && fr.hz !== null) {
+              exLastTraceAt = tNow;
+              const pitchMidi = hzToMidi(fr.hz);
+              exTrace.push({
+                t_ms: Math.round(tNow - exStartedAt),
+                step_index: exStepIdx,
+                target_midi: exTargets[exStepIdx],
+                pitch_midi_x100: Math.round(pitchMidi * 100),
+                cents_x10: Math.round(fr.cents * 10),
+                clarity_x100: Math.round(clamp(fr.clarity, 0, 1) * 100),
+                rms_x10000: Math.round(clamp(fr.rms, 0, 1) * 10000),
+              });
             }
           }
         }

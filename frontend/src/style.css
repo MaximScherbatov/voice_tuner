@@ -110,6 +110,26 @@ html[data-theme="light"] .card::before{ opacity:.08; }
 
 .ico{ width:18px; height:18px; fill: currentColor; opacity:.92; }
 .lbl{ font-size: 12px; letter-spacing: .08em; text-transform: uppercase; opacity:.92; }
+
+.modeIco{
+  display:inline-flex;
+  align-items:center;
+}
+.modeIco .ico{
+  width:18px;
+  height:18px;
+}
+
+/* micMeta with per-metric tooltips */
+#micMeta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  align-items:center;
+}
+.micStat{ cursor: help; display:inline-flex; align-items:baseline; gap:6px; }
+.micSep{ opacity:.55; padding: 0 2px; }
+
 .modeIco{
   font-size: 14px;
   opacity: .85;
