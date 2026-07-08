@@ -1804,13 +1804,19 @@ try {
       stEx.textContent = "";
     }
 
-    micMeta.textContent = formatTemplate(t("mic_meta"), {
-      rms: lastFrame.rms.toFixed(3),
-      clarity: (lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0).toFixed(2),
-      noise: noiseRms.toFixed(4),
-      snr: snrDbDisp.toFixed(1),
-      keep: energyKeepDisp ? t("keep_yes") : t("keep_no"),
-    });
+    const clarityDisp = lastFrame.rms >= RMS_MIN ? lastFrame.clarity : 0;
+
+    micMeta.innerHTML = `
+      <span class="micStat" data-tip="${t("tip_mic_rms")}">rms: <span class="smallMono">${lastFrame.rms.toFixed(3)}</span></span>
+      <span class="micSep">•</span>
+      <span class="micStat" data-tip="${t("tip_mic_clarity")}">clarity: <span class="smallMono">${clarityDisp.toFixed(2)}</span></span>
+      <span class="micSep">•</span>
+      <span class="micStat" data-tip="${t("tip_mic_noise")}">noise: <span class="smallMono">${noiseRms.toFixed(4)}</span></span>
+      <span class="micSep">•</span>
+      <span class="micStat" data-tip="${t("tip_mic_snr")}">snr: <span class="smallMono">${snrDbDisp.toFixed(1)} ${t("unit_db")}</span></span>
+      <span class="micSep">•</span>
+      <span class="micStat" data-tip="${t("tip_mic_keep")}">keep: <span class="smallMono">${energyKeepDisp ? t("keep_yes") : t("keep_no")}</span></span>
+    `;
 
     const n = midiToNote(targetMidi);
     const smallName = LANG === "ru" ? n.ru : n.name;
