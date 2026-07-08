@@ -926,19 +926,19 @@ try {
 
         <div class="small" data-tip="${t("tip_ex_hold")}">${t("exercises_hold")}</div>
         <input class="slider" id="exHoldMs" type="range" min="0" max="4000" step="100" value="${exHoldMs}" />
-        <div class="small" id="exHoldMeta">${Math.round(exHoldMs)} ms</div>
+        <div class="small" id="exHoldMeta">${Math.round(exHoldMs)} ${t("unit_ms")}</div>
 
         <div style="height:12px"></div>
 
         <div class="small" data-tip="${t("tip_ex_max_step")}">${t("exercises_max_step")}</div>
         <input class="slider" id="exMaxStepMs" type="range" min="2000" max="120000" step="250" value="${exMaxStepMs}" />
-        <div class="small" id="exMaxStepMeta">${Math.round(exMaxStepMs)} ms</div>
+        <div class="small" id="exMaxStepMeta">${Math.round(exMaxStepMs)} ${t("unit_ms")}</div>
 
         <div style="height:12px"></div>
 
         <div class="small" data-tip="${t("tip_ex_reps")}">${t("exercises_reps")}</div>
         <input class="slider" id="exTrCount" type="range" min="1" max="24" step="1" value="${exTransposeCount}" />
-        <div class="small" id="exTrMeta">${Math.round(exTransposeCount)} reps</div>
+        <div class="small" id="exTrMeta">${Math.round(exTransposeCount)} ${t("unit_reps")}</div>
 
         <div class="hr"></div>
 
@@ -1218,17 +1218,17 @@ try {
   exHoldSlider.oninput = () => {
     exHoldMs = Number(exHoldSlider.value);
     localStorage.setItem("vtp_exHoldMs", String(exHoldMs));
-    exHoldMeta.textContent = `${Math.round(exHoldMs)} ms`;
+    exHoldMeta.textContent = `${Math.round(exHoldMs)} ${t("unit_ms")}`;
   };
   exMaxStepSlider.oninput = () => {
     exMaxStepMs = Number(exMaxStepSlider.value);
     localStorage.setItem("vtp_exMaxStepMs", String(exMaxStepMs));
-    exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ms`;
+    exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ${t("unit_ms")}`;
   };
   exTrCountSlider.oninput = () => {
     exTransposeCount = Number(exTrCountSlider.value);
     localStorage.setItem("vtp_exTransposeCount", String(exTransposeCount));
-    exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
+    exTrMeta.textContent = `${Math.round(exTransposeCount)} ${t("unit_reps")}`;
   };
 
   const renderTrainMode = () => {
@@ -1272,7 +1272,7 @@ try {
   function syncRootUI() {
     const n = midiToNote(rootMidiUser);
     rootNotePill.textContent = `${n.name}${n.octave}`;
-    octPill.textContent = `Oct ${n.octave}`;
+    octPill.textContent = `${t("oct_short")} ${n.octave}`;
     rootHzLabel.textContent = fmtHz(midiToHz(rootMidiUser));
 
     selNote.value = n.name;
@@ -1549,7 +1549,7 @@ try {
 
     resultsMeta.textContent =
       `${t("results_score")}: ${score}% • ${t("results_time")}: ${timeS}${LANG === "ru" ? "с" : "s"}` +
-      (avgT2g !== null ? ` • ${t("results_avg_t2g")}: ${avgT2g}ms` : "");
+      (avgT2g !== null ? ` • ${t("results_avg_t2g")}: ${avgT2g} ${t("unit_ms")}` : "");
 
     const th = (label: string, tip: string) =>
       `<th><span class="thTip" tabindex="0" data-tip="${tip}">${label}</span></th>`;
@@ -1771,9 +1771,9 @@ try {
   setMarkerCents(null);
 
   tolMeta.textContent = `±${tolPct.toFixed(1)}%`;
-  exHoldMeta.textContent = `${Math.round(exHoldMs)} ms`;
-  exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ms`;
-  exTrMeta.textContent = `${Math.round(exTransposeCount)} reps`;
+  exHoldMeta.textContent = `${Math.round(exHoldMs)} ${t("unit_ms")}`;
+  exMaxStepMeta.textContent = `${Math.round(exMaxStepMs)} ${t("unit_ms")}`;
+  exTrMeta.textContent = `${Math.round(exTransposeCount)} ${t("unit_reps")}`;
 
   const updateUI = () => {
     btnStart.classList.toggle("active", exActive);
