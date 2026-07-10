@@ -15,6 +15,8 @@ from sqlalchemy import select, func, text
 from .db import get_engine, make_session_factory, Base
 from .models import TrainingAttempt, User, ExerciseAttempt
 
+from passlib.exc import UnknownHashError
+
 DB_URL = os.getenv("DB_URL", "sqlite:////data/app.db")
 
 engine = get_engine(DB_URL)
@@ -23,7 +25,10 @@ SessionLocal = make_session_factory(engine)
 # Create new tables (won't alter old ones)
 Base.metadata.create_all(bind=engine)
 
-pwd_ctx = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+pwd_ctx = CryptContext(
+    schemes=["bcrypt_sha256", "bcrypt"],  # сначала новая, потом старая
+    deprecated=["bcrypt"],                # старую считаем устаревшей
+)
 
 def _norm_username(s: str) -> str:
   return s.strip().lower()
@@ -266,17 +271,27 @@ def auth_register(
 @app.post("/auth/login")
 @app.post("/api/auth/login")
 def auth_login(payload: CredentialsIn, db: Session = Depends(get_db)) -> AuthOut:
-  uname_norm = _norm_username(payload.username)
+    uname_norm = _norm_username(payload.username)
 
-  u = db.execute(select(User).where(User.username_norm == uname_norm)).scalar_one_or_none()
-  if not u or not u.password_hash:
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+    u = db.execute(select(User).where(User.username_norm == uname_norm)).scalar_one_or_none()
+    if not u or not u.password_hash:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-  if not pwd_ctx.verify(payload.password, u.password_hash):
-    raise HTTPException(status_code=401, detail="Invalid credentials")
+    try:
+        ok = pwd_ctx.verify(payload.password, u.password_hash)
+    except UnknownHashError:
+        # Хэш в БД не распознан (старый/битый/неизвестный формат) → не 500, а 401
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
-  return AuthOut(user_id=u.id, token=u.token, created_at=u.created_at.isoformat())
+    if not ok:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
 
+    # Опционально: авто-апгрейд хэша до актуальной схемы
+    if pwd_ctx.needs_update(u.password_hash):
+        u.password_hash = pwd_ctx.hash(payload.password)
+        db.commit()
+
+    return AuthOut(user_id=u.id, token=u.token, created_at=u.created_at.isoformat())
 
 
 
