@@ -553,3 +553,200 @@ html[data-theme="light"] .tipBubble{
   border: 1px solid rgba(15,23,42,.14);
   box-shadow: 0 18px 60px rgba(16,24,40,.16);
 }
+
+/* -----------------------
+   Cabinet (Account) page
+----------------------- */
+
+.modalCardFull{
+  width: min(1100px, calc(100vw - 16px));
+  height: min(900px, calc(100vh - 16px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cabTabs{
+  display:flex;
+  gap:8px;
+  padding: 10px 14px;
+}
+
+.tabBtn{
+  border: 1px solid var(--line2);
+  background: transparent;
+  color: var(--text);
+  border-radius: 14px;
+  padding: 10px 12px;
+  font-weight: 900;
+  cursor: pointer;
+}
+.tabBtn.active{
+  background: var(--btnBgHover);
+  border-color: rgba(96,165,250,.5);
+}
+
+.cabBody{
+  padding: 12px 14px;
+  overflow: auto;
+}
+
+.cabFilters{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:flex-end;
+  margin-bottom: 12px;
+}
+
+.cabFilters .fGroup{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width: 160px;
+}
+.cabFilters label{
+  font-size: 12px;
+  opacity: .75;
+  font-weight: 900;
+}
+
+.cabCards{
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cabCard{
+  border:1px solid var(--line2);
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 12px;
+}
+.cabCard .k{ font-size:12px; opacity:.72; font-weight:900; }
+.cabCard .v{ font-size:20px; font-weight:1000; margin-top:4px; }
+.cabCard .s{ font-size:12px; opacity:.7; margin-top:4px; }
+
+.trendCanvas{
+  width:100%;
+  height:220px;
+  border:1px solid var(--line2);
+  background: var(--panel);
+  border-radius: 16px;
+}
+
+.sessionsList{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.sessionItem{
+  border:1px solid var(--line2);
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 12px;
+  cursor: pointer;
+}
+.sessionItem:hover{
+  border-color: rgba(96,165,250,.45);
+}
+
+.sessionTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+.sessionTitle{
+  font-weight: 1000;
+}
+.sessionMeta{
+  opacity:.75;
+  font-size:12px;
+  font-weight: 900;
+}
+.sessionGrid{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+.sessionGrid .m{
+  font-size:12px;
+  opacity:.72;
+}
+.sessionGrid .v{
+  font-size:14px;
+  font-weight: 1000;
+}
+
+.hmWrap{
+  margin-top: 12px;
+  border:1px solid var(--line2);
+  background: var(--panel);
+  border-radius: 16px;
+  padding: 12px;
+}
+.hmLegend{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  align-items:center;
+  opacity:.8;
+  font-size:12px;
+  font-weight:900;
+  margin-bottom: 10px;
+}
+
+.hmScroll{
+  overflow:auto;
+}
+.hmGrid{
+  display:grid;
+  grid-template-columns: 56px repeat(12, 26px);
+  gap: 6px;
+  min-width: 56px + (12 * 26px);
+}
+.hmHead{
+  font-size:12px;
+  opacity:.75;
+  font-weight:1000;
+  text-align:center;
+}
+.hmRowLab{
+  font-size:12px;
+  opacity:.75;
+  font-weight:1000;
+  display:flex;
+  align-items:center;
+}
+.hmCell{
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
+  border: 1px solid var(--line2);
+  background: rgba(255,255,255,.06);
+  cursor: pointer;
+}
+
+@media (max-width: 720px){
+  .modalCardFull{
+    width: calc(100vw - 12px);
+    height: calc(100vh - 12px);
+  }
+  .cabCards{
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .sessionGrid{
+    grid-template-columns: repeat(2, minmax(0,1fr));
+  }
+  .hmGrid{
+    grid-template-columns: 52px repeat(12, 22px);
+    gap: 6px;
+  }
+  .hmCell{
+    width: 22px;
+    height: 22px;
+    border-radius: 7px;
+  }
+}
