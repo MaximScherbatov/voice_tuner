@@ -3,7 +3,7 @@ import json
 import secrets
 from typing import Any
 
-from datetime import datetime
+from datetime import datetime, timedelta, date
 from passlib.context import CryptContext
 from sqlalchemy.exc import IntegrityError
 
@@ -541,3 +541,319 @@ def list_exercise_attempts(
     })
 
   return out
+
+# -----------------------
+# Cabinet API
+# -----------------------
+
+def _parse_date_yyyy_mm_dd(s: str) -> datetime:
+    # expects "YYYY-MM-DD"
+    return datetime.fromisoformat(s.strip())
+
+def _attempt_filters(
+    u: User,
+    root_midi: int | None,
+    date_from: str | None,
+    date_to: str | None,
+    exercise_id: str | None,
+    mode: str | None,
+):
+    cond = [ExerciseAttempt.user_id == u.id]
+
+    if root_midi is not None:
+        cond.append(ExerciseAttempt.root_midi == root_midi)
+
+    if exercise_id:
+        cond.append(ExerciseAttempt.exercise_id == exercise_id)
+
+    if mode:
+        cond.append(ExerciseAttempt.mode == mode)
+
+    if date_from:
+        dt_from = _parse_date_yyyy_mm_dd(date_from)
+        cond.append(ExerciseAttempt.created_at >= dt_from)
+
+    if date_to:
+        dt_to = _parse_date_yyyy_mm_dd(date_to) + timedelta(days=1)  # inclusive end-date
+        cond.append(ExerciseAttempt.created_at < dt_to)
+
+    return cond
+
+
+@app.get("/api/cabinet/sessions")
+def cabinet_sessions(
+    limit: int = 25,
+    offset: int = 0,
+    root_midi: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    exercise_id: str | None = None,
+    mode: str | None = None,
+    db: Session = Depends(get_db),
+    u: User | None = Depends(get_current_user),
+):
+    u = require_user(u)
+
+    lim = max(1, min(limit, 100))
+    off = max(0, offset)
+
+    cond = _attempt_filters(u, root_midi, date_from, date_to, exercise_id, mode)
+
+    q = (
+        select(ExerciseAttempt)
+        .where(*cond)
+        .order_by(ExerciseAttempt.id.desc())
+        .offset(off)
+        .limit(lim + 1)
+    )
+
+    rows = db.execute(q).scalars().all()
+    has_more = len(rows) > lim
+    rows = rows[:lim]
+
+    items = []
+    for r in rows:
+        items.append({
+            "id": r.id,
+            "created_at": r.created_at.isoformat(),
+            "exercise_id": r.exercise_id,
+            "mode": r.mode,
+            "timing_mode": r.timing_mode,
+            "root_midi": r.root_midi,
+            "total_time_ms": r.total_time_ms,
+            "score_total": r.score_total,
+            "avg_time_to_green_ms": r.avg_time_to_green_ms,
+            "p95_time_to_green_ms": r.p95_time_to_green_ms,
+            "avg_abs_cents": r.avg_abs_cents,
+            "p95_abs_cents": r.p95_abs_cents,
+        })
+
+    return {
+        "items": items,
+        "next_offset": (off + lim) if has_more else None,
+    }
+
+
+@app.get("/api/cabinet/sessions/{attempt_id}")
+def cabinet_session_detail(
+    attempt_id: int,
+    db: Session = Depends(get_db),
+    u: User | None = Depends(get_current_user),
+):
+    u = require_user(u)
+
+    r = db.execute(
+        select(ExerciseAttempt).where(
+            ExerciseAttempt.id == attempt_id,
+            ExerciseAttempt.user_id == u.id,
+        )
+    ).scalar_one_or_none()
+
+    if not r:
+        raise HTTPException(status_code=404, detail="Not found")
+
+    return {
+        "id": r.id,
+        "created_at": r.created_at.isoformat(),
+        "exercise_id": r.exercise_id,
+        "mode": r.mode,
+        "timing_mode": r.timing_mode,
+        "root_midi": r.root_midi,
+        "total_time_ms": r.total_time_ms,
+        "score_total": r.score_total,
+        "avg_time_to_green_ms": r.avg_time_to_green_ms,
+        "p95_time_to_green_ms": r.p95_time_to_green_ms,
+        "avg_abs_cents": r.avg_abs_cents,
+        "p95_abs_cents": r.p95_abs_cents,
+        "steps": json.loads(r.steps_json),
+        "trace": json.loads(r.trace_json) if r.trace_json else None,
+    }
+
+
+@app.get("/api/cabinet/summary")
+def cabinet_summary(
+    root_midi: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    exercise_id: str | None = None,
+    mode: str | None = None,
+    db: Session = Depends(get_db),
+    u: User | None = Depends(get_current_user),
+):
+    u = require_user(u)
+
+    cond = _attempt_filters(u, root_midi, date_from, date_to, exercise_id, mode)
+
+    row = db.execute(
+        select(
+            func.count(ExerciseAttempt.id).label("n"),
+            func.coalesce(func.sum(ExerciseAttempt.total_time_ms), 0).label("time_sum"),
+            func.avg(ExerciseAttempt.score_total).label("score_avg"),
+            func.avg(ExerciseAttempt.avg_abs_cents).label("abs_cents_avg"),
+            func.avg(ExerciseAttempt.avg_time_to_green_ms).label("t2g_avg"),
+        ).where(*cond)
+    ).one()
+
+    n = int(row.n or 0)
+    time_sum = int(row.time_sum or 0)
+
+    # streak: count consecutive days (based on any attempt per day)
+    day_rows = db.execute(
+        select(func.date(ExerciseAttempt.created_at).label("d"))
+        .where(*cond)
+        .group_by(text("d"))
+        .order_by(text("d DESC"))
+        .limit(400)
+    ).all()
+
+    days_set = set()
+    for (d,) in day_rows:
+        if d:
+            days_set.add(str(d))  # sqlite returns 'YYYY-MM-DD'
+
+    today = date.today()
+    streak = 0
+    for i in range(0, 400):
+        dd = (today - timedelta(days=i)).isoformat()
+        if dd in days_set:
+            streak += 1
+        else:
+            break
+
+    return {
+        "attempts": n,
+        "time_sum_ms": time_sum,
+        "score_avg": float(row.score_avg) if row.score_avg is not None else None,
+        "abs_cents_avg": float(row.abs_cents_avg) if row.abs_cents_avg is not None else None,
+        "t2g_avg_ms": float(row.t2g_avg) if row.t2g_avg is not None else None,
+        "streak_days": streak,
+    }
+
+
+@app.get("/api/cabinet/trends")
+def cabinet_trends(
+    root_midi: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    exercise_id: str | None = None,
+    mode: str | None = None,
+    db: Session = Depends(get_db),
+    u: User | None = Depends(get_current_user),
+):
+    u = require_user(u)
+
+    cond = _attempt_filters(u, root_midi, date_from, date_to, exercise_id, mode)
+
+    rows = db.execute(
+        select(
+            func.date(ExerciseAttempt.created_at).label("d"),
+            func.count(ExerciseAttempt.id).label("n"),
+            func.coalesce(func.sum(ExerciseAttempt.total_time_ms), 0).label("time_sum"),
+            func.avg(ExerciseAttempt.score_total).label("score_avg"),
+            func.avg(ExerciseAttempt.avg_abs_cents).label("abs_cents_avg"),
+            func.avg(ExerciseAttempt.avg_time_to_green_ms).label("t2g_avg"),
+        )
+        .where(*cond)
+        .group_by(text("d"))
+        .order_by(text("d ASC"))
+    ).all()
+
+    out = []
+    for d, n, time_sum, score_avg, abs_cents_avg, t2g_avg in rows:
+        out.append({
+            "day": str(d),
+            "attempts": int(n or 0),
+            "time_sum_ms": int(time_sum or 0),
+            "score_avg": float(score_avg) if score_avg is not None else None,
+            "abs_cents_avg": float(abs_cents_avg) if abs_cents_avg is not None else None,
+            "t2g_avg_ms": float(t2g_avg) if t2g_avg is not None else None,
+        })
+    return out
+
+
+@app.get("/api/cabinet/heatmap")
+def cabinet_heatmap(
+    root_midi: int | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    max_sessions: int = 200,
+    db: Session = Depends(get_db),
+    u: User | None = Depends(get_current_user),
+):
+    """
+    Heatmap is computed from last N sessions in the selected period (default 200)
+    to keep it fast.
+    """
+    u = require_user(u)
+
+    max_sessions = max(20, min(int(max_sessions), 800))
+    cond = _attempt_filters(u, root_midi, date_from, date_to, None, None)
+
+    rows = db.execute(
+        select(ExerciseAttempt.steps_json, ExerciseAttempt.trace_json)
+        .where(*cond)
+        .order_by(ExerciseAttempt.id.desc())
+        .limit(max_sessions)
+    ).all()
+
+    # per midi aggregates
+    # success from steps_json (pct_in_green)
+    succ_sum: dict[int, float] = {}
+    succ_n: dict[int, int] = {}
+
+    # bias from trace_json (signed cents)
+    bias_sum: dict[int, float] = {}
+    bias_n: dict[int, int] = {}
+
+    for steps_json, trace_json in rows:
+        # steps
+        try:
+            steps = json.loads(steps_json) if steps_json else []
+            for s in steps:
+                midi = s.get("target_midi")
+                if not isinstance(midi, int) or midi < 0 or midi > 127:
+                    continue
+                pct = s.get("pct_in_green")
+                pct0 = float(pct) if pct is not None else 0.0
+                succ_sum[midi] = succ_sum.get(midi, 0.0) + pct0
+                succ_n[midi] = succ_n.get(midi, 0) + 1
+        except Exception:
+            pass
+
+        # trace bias
+        if trace_json:
+            try:
+                tr = json.loads(trace_json)
+                if isinstance(tr, list):
+                    for p in tr:
+                        midi = p.get("target_midi")
+                        cx10 = p.get("cents_x10")
+                        if not isinstance(midi, int) or midi < 0 or midi > 127:
+                            continue
+                        if not isinstance(cx10, int):
+                            continue
+                        cents = cx10 / 10.0
+                        # clip to reduce outlier influence
+                        if cents < -80: cents = -80
+                        if cents > 80: cents = 80
+                        bias_sum[midi] = bias_sum.get(midi, 0.0) + cents
+                        bias_n[midi] = bias_n.get(midi, 0) + 1
+            except Exception:
+                pass
+
+    out = []
+    all_midis = sorted(set(list(succ_n.keys()) + list(bias_n.keys())))
+    for midi in all_midis:
+        sn = succ_n.get(midi, 0)
+        bn = bias_n.get(midi, 0)
+        out.append({
+            "midi": midi,
+            "steps": sn,
+            "success_pct": (succ_sum[midi] / sn) if sn else None,  # 0..100
+            "bias_cents": (bias_sum[midi] / bn) if bn else None,    # signed
+        })
+
+    return {
+        "max_sessions": max_sessions,
+        "cells": out,
+    }
