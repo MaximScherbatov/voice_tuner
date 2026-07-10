@@ -13,6 +13,23 @@ class User(Base):
     token: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
+    # --- Registration (optional; guest users have NULLs) ---
+    username: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    username_norm: Mapped[str | None] = mapped_column(String(64), nullable=True, index=True, unique=True)
+
+    password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    registered_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    # --- Paid / AI entitlements (future-proof fields) ---
+    plan: Mapped[str | None] = mapped_column(String(16), nullable=True, index=True)  # "free" / "pro" / "trial"
+    paid_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+    ai_enabled: Mapped[int | None] = mapped_column(Integer, nullable=True)  # 0/1
+    ai_credits_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    ai_credits_used: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
+    entitlements_json: Mapped[str | None] = mapped_column(Text, nullable=True)  # "{}" etc
+
     training_attempts = relationship("TrainingAttempt", back_populates="user")
     exercise_attempts = relationship("ExerciseAttempt", back_populates="user")
 
@@ -53,6 +70,8 @@ class ExerciseAttempt(Base):
 
     mode: Mapped[str] = mapped_column(String(16), nullable=False)         # assist / challenge
     timing_mode: Mapped[str] = mapped_column(String(16), nullable=False)  # flow / tempo
+
+    root_midi: Mapped[int | None] = mapped_column(Integer, nullable=True, index=True)
 
     total_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
     score_total: Mapped[float | None] = mapped_column(Float, nullable=True)

@@ -166,6 +166,21 @@ const I18N: Record<Lang, Record<string, string>> = {
     copied: "Скопировано.",
     share_copied: "Текст для шаринга скопирован.",
     mic_error: "Ошибка микрофона: ",
+
+    login: "Войти",
+    tip_account: "Личный кабинет",
+
+    auth_title_register: "Регистрация",
+    auth_title_login: "Вход",
+    auth_subtitle: "Регистрация даёт историю занятий, прогресс и статистику.",
+    auth_username: "Никнейм",
+    auth_password: "Пароль",
+    auth_btn_register: "Зарегистрироваться",
+    auth_btn_login: "Войти",
+    auth_switch_to_login: "Уже есть аккаунт? Войти",
+    auth_switch_to_register: "Нет аккаунта? Регистрация",
+    auth_err_taken: "Этот ник уже занят.",
+    auth_err_invalid: "Неверный логин или пароль.",
   },
   en: {
     app_title: "Voice Trainer",
@@ -300,6 +315,21 @@ const I18N: Record<Lang, Record<string, string>> = {
     copied: "Copied.",
     share_copied: "Share text copied.",
     mic_error: "Mic error: ",
+
+    login: "Login",
+    tip_account: "Account",
+
+    auth_title_register: "Register",
+    auth_title_login: "Login",
+    auth_subtitle: "Registration enables history, progress and stats.",
+    auth_username: "Nickname",
+    auth_password: "Password",
+    auth_btn_register: "Register",
+    auth_btn_login: "Login",
+    auth_switch_to_login: "Already have an account? Login",
+    auth_switch_to_register: "No account? Register",
+    auth_err_taken: "This nickname is already taken.",
+    auth_err_invalid: "Invalid username or password.",
   },
 };
 
@@ -379,59 +409,32 @@ let AUTH_TOKEN: string | null = localStorage.getItem("vtp_token");
 async function ensureAuthToken() {
   if (AUTH_TOKEN) return AUTH_TOKEN;
 
-  const urls = ["/api/auth/anonymous", "/auth/anonymous"];
-  let lastErr: any = null;
+  const r = await fetch("/api/auth/anonymous", { method: "POST" });
+  if (!r.ok) throw new Error(await r.text());
 
-  for (const u of urls) {
-    try {
-      const r = await fetch(u, { method: "POST" });
-      if (!r.ok) {
-        lastErr = await r.text();
-        continue;
-      }
-      const j = await r.json();
-      AUTH_TOKEN = j.token;
-      localStorage.setItem("vtp_token", AUTH_TOKEN);
-      return AUTH_TOKEN;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-
-  throw new Error(`Cannot create anonymous user token: ${String(lastErr)}`);
+  const j = await r.json();
+  AUTH_TOKEN = j.token;
+  localStorage.setItem("vtp_token", AUTH_TOKEN);
+  return AUTH_TOKEN;
 }
 
 async function postJson(url: string, data: any) {
-  if (!AUTH_TOKEN) {
-    try {
-      await ensureAuthToken();
-    } catch {}
-  }
+  if (!AUTH_TOKEN) await ensureAuthToken(); // без try/catch
 
   return fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      ...(AUTH_TOKEN ? { Authorization: `Bearer ${AUTH_TOKEN}` } : {}),
+      Authorization: `Bearer ${AUTH_TOKEN}`,
     },
     body: JSON.stringify(data),
   });
 }
 
 async function saveExerciseAttempt(payload: any) {
-  const urls = ["/api/exercise_attempts", "/exercise_attempts"];
-  let lastErr: any = null;
-
-  for (const u of urls) {
-    try {
-      const r = await postJson(u, payload);
-      if (r.ok) return await r.json();
-      lastErr = await r.text();
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-  throw new Error(`Save exercise failed: ${String(lastErr)}`);
+  const r = await postJson("/api/exercise_attempts", payload);
+  if (!r.ok) throw new Error(`Save exercise failed: ${await r.text()}`);
+  return await r.json();
 }
 
 /** Theme */
@@ -514,6 +517,8 @@ const ICONS = {
 
   headphones: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 0-9 9v7a2 2 0 0 0 2 2h3v-8H5v-3a7 7 0 0 1 14 0v3h-3v8h3a2 2 0 0 0 2-2v-7a9 9 0 0 0-9-9Z"/></svg>`,
   timer: `<svg class="ico" viewBox="0 0 24 24"><path d="M9 1h6v2H9V1Zm3 4a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm0 16a7 7 0 1 1 7-7 7 7 0 0 1-7 7Zm.5-11H11v5l4.3 2.6.7-1.2-3.5-2.1V10Z"/></svg>`,
+
+  user: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2-8 4.5V21h16v-2.5C20 16 16.42 14 12 14Z"/></svg>`,
 };
 
 try {
@@ -779,6 +784,12 @@ try {
           <div class="brand">${t("app_title_short")}</div>
         </div>
         <div class="badges">
+          <a class="topLink" href="#" id="topLoginLink">${t("login")}</a>
+
+          <button class="iconBtn mini" id="btnTopAccount" data-tip="${t("tip_account")}" style="display:none">
+            ${ICONS.user}
+          </button>
+
           <button class="iconBtn mini" id="btnTopLang" data-tip="${t("tip_lang")}">${ICONS.globe}</button>
           <button class="iconBtn mini" id="btnTopTheme" data-tip="${t("tip_theme")}"></button>
           <button class="iconBtn mini" id="btnTopSettings" data-tip="${t("tip_settings")}">${ICONS.gear}</button>
@@ -977,6 +988,37 @@ try {
         <div class="small" id="micMeta"></div>
       </div>
     </div>
+
+    <div class="modalBackdrop" id="authModal">
+      <div class="card modalCard" style="max-width:560px">
+        <div class="modalHeader">
+          <div class="brand" id="authTitle">${t("auth_title_register")}</div>
+          <button class="iconBtn" id="btnAuthClose">${ICONS.stop}<span class="lbl">${t("close")}</span></button>
+        </div>
+
+        <div class="hr"></div>
+        <div class="small" id="authSubtitle">${t("auth_subtitle")}</div>
+
+        <div style="height:12px"></div>
+
+        <div class="small">${t("auth_username")}</div>
+        <input class="textField" id="authUsername" autocomplete="username" />
+
+        <div style="height:12px"></div>
+
+        <div class="small">${t("auth_password")}</div>
+        <input class="textField" id="authPassword" type="password" autocomplete="current-password" />
+
+        <div style="height:12px"></div>
+
+        <div class="authErr" id="authErr" style="min-height:20px"></div>
+
+        <div class="row" style="margin-top:6px">
+          <button class="iconBtn ledGreen" id="btnAuthSubmit"><span class="lbl">${t("auth_btn_register")}</span></button>
+          <button class="iconBtn" id="btnAuthSwitch"><span class="lbl">${t("auth_switch_to_login")}</span></button>
+        </div>
+      </div>
+    </div>
   </div>
   `;
 
@@ -985,6 +1027,150 @@ try {
     if (!el) throw new Error(`UI element not found: ${sel}`);
     return el as T;
   };
+
+  type Me = {
+    user_id: number;
+    created_at: string;
+    username: string | null;
+    is_registered: boolean;
+    plan: string;
+    paid_until: string | null;
+    ai_enabled: boolean;
+    ai_credits_total: number;
+    ai_credits_used: number;
+  };
+
+  async function fetchMe(): Promise<Me | null> {
+    if (!AUTH_TOKEN) return null;
+    const r = await fetch("/api/me", {
+      headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+    });
+    if (!r.ok) return null;
+    return (await r.json()) as Me;
+  }
+
+  function setAuthToken(tok: string) {
+    AUTH_TOKEN = tok;
+    localStorage.setItem("vtp_token", tok);
+  }
+
+  const topLoginLink = q<HTMLAnchorElement>("#topLoginLink");
+  const btnTopAccount = q<HTMLButtonElement>("#btnTopAccount");
+
+  const authModal = q<HTMLDivElement>("#authModal");
+  const btnAuthClose = q<HTMLButtonElement>("#btnAuthClose");
+  const authTitle = q<HTMLDivElement>("#authTitle");
+  const authErr = q<HTMLDivElement>("#authErr");
+  const authUsername = q<HTMLInputElement>("#authUsername");
+  const authPassword = q<HTMLInputElement>("#authPassword");
+  const btnAuthSubmit = q<HTMLButtonElement>("#btnAuthSubmit");
+  const btnAuthSwitch = q<HTMLButtonElement>("#btnAuthSwitch");
+
+  let authMode: "register" | "login" = "register";
+
+  function applyAuthMode() {
+    authErr.textContent = "";
+    if (authMode === "register") {
+      authTitle.textContent = t("auth_title_register");
+      btnAuthSubmit.querySelector(".lbl")!.textContent = t("auth_btn_register");
+      btnAuthSwitch.querySelector(".lbl")!.textContent = t("auth_switch_to_login");
+    } else {
+      authTitle.textContent = t("auth_title_login");
+      btnAuthSubmit.querySelector(".lbl")!.textContent = t("auth_btn_login");
+      btnAuthSwitch.querySelector(".lbl")!.textContent = t("auth_switch_to_register");
+    }
+  }
+
+  function openAuthModal(mode: "register" | "login") {
+    authMode = mode;
+    applyAuthMode();
+    authModal.style.display = "block";
+    setTimeout(() => authUsername.focus(), 0);
+  }
+  function closeAuthModal() {
+    authModal.style.display = "none";
+    authErr.textContent = "";
+  }
+
+  btnAuthClose.onclick = closeAuthModal;
+  authModal.addEventListener("click", (e) => {
+    if (e.target === authModal) closeAuthModal();
+  });
+
+  btnAuthSwitch.onclick = () => {
+    authMode = authMode === "register" ? "login" : "register";
+    applyAuthMode();
+  };
+
+  topLoginLink.onclick = async (e) => {
+    e.preventDefault();
+    // если вдруг токена нет — создадим гостя
+    await ensureAuthToken().catch(() => {});
+    const me = await fetchMe();
+    // если гость — сразу регистрация; иначе логин
+    openAuthModal(me?.is_registered ? "login" : "register");
+  };
+
+  btnTopAccount.onclick = (e) => {
+    e.preventDefault();
+    // Этап 2: тут будет переход в кабинет
+    alert("Личный кабинет будет на следующем этапе.");
+  };
+
+  btnAuthSubmit.onclick = async () => {
+    authErr.textContent = "";
+    const username = authUsername.value.trim();
+    const password = authPassword.value;
+
+    try {
+      if (authMode === "register") {
+        const r = await postJson("/api/auth/register", { username, password });
+        if (r.status === 409) {
+          authErr.textContent = t("auth_err_taken");
+          return;
+        }
+        if (!r.ok) {
+          authErr.textContent = await r.text();
+          return;
+        }
+        const j = await r.json();
+        setAuthToken(j.token);
+      } else {
+        const r = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username, password }),
+        });
+        if (r.status === 401) {
+          authErr.textContent = t("auth_err_invalid");
+          return;
+        }
+        if (!r.ok) {
+          authErr.textContent = await r.text();
+          return;
+        }
+        const j = await r.json();
+        setAuthToken(j.token);
+      }
+
+      // обновить верхнюю панель
+      await refreshAccountUi();
+      closeAuthModal();
+    } catch (e: any) {
+      authErr.textContent = String(e?.message || e);
+    }
+  };
+
+  async function refreshAccountUi() {
+    const me = await fetchMe();
+    const isReg = Boolean(me?.is_registered);
+
+    topLoginLink.style.display = isReg ? "none" : "inline-flex";
+    btnTopAccount.style.display = isReg ? "inline-flex" : "none";
+  }
+
+  // при старте — показать правильный элемент (login или иконку)
+  refreshAccountUi().catch(() => {});
 
   /** Pretty tooltips (custom) */
   const tipEl = document.createElement("div");
@@ -1572,8 +1758,14 @@ try {
     const timeS = payload.total_time_ms ? Math.round(payload.total_time_ms / 1000) : "—";
     const avgT2g = payload.avg_time_to_green_ms ? Math.round(payload.avg_time_to_green_ms) : null;
 
+    const rootMidi = Number(payload?.root_midi ?? localStorage.getItem("vtp_targetMidi") ?? "60");
+    const n = midiToNote(rootMidi);
+    const rootLabel = LANG === "ru"
+      ? `${n.ru}${n.octave} (${n.name}${n.octave})`
+      : `${n.name}${n.octave}`;
+
     resultsMeta.textContent =
-      `${t("results_score")}: ${score}% • ${t("results_time")}: ${timeS}${LANG === "ru" ? "с" : "s"}` +
+      `${t("results_score")}: ${score}% • ${t("results_time")}: ${timeS}${LANG === "ru" ? "с" : "s"} • ${rootLabel}` +
       (avgT2g !== null ? ` • ${t("results_avg_t2g")}: ${avgT2g} ${t("unit_ms")}` : "");
 
     const th = (label: string, tip: string) =>
@@ -1711,6 +1903,9 @@ try {
       stop_reason: reason,
     };
 
+    const rootMidi = Number(localStorage.getItem("vtp_targetMidi") ?? "60");
+    payload.root_midi = rootMidi;
+
     const prevGhost = loadGhostPack(payload.exercise_id);
     lastGhost = (prevGhost && isGhostCompatible(prevGhost, payload)) ? prevGhost : null;
 
@@ -1719,20 +1914,24 @@ try {
     lastExerciseFinishedAt = new Date();
 
     badgeSave.textContent = `${t("label_saved")}: …`;
-    try {
-      const res = await saveExerciseAttempt(payload);
-      badgeSave.textContent = `${t("label_saved")}: id=${res.id}`;
-      setHint(`${t("saved")}: ${lastExerciseTitle}`, 2000);
-    } catch (e) {
-      badgeSave.textContent = `${t("label_saved")}: ${LANG === "ru" ? "ошибка" : "error"}`;
-      setHint(`${t("save_error")}: ${String(e)}`, 7000);
-    }
 
+    // 1) показываем результат сразу
     renderResults(payload, lastGhost);
     saveGhostPack(payload.exercise_id, payload);
-
     resultsWrap.scrollIntoView({ behavior: "smooth", block: "start" });
 
+    // 2) сохраняем в фоне (без await)
+    void saveExerciseAttempt(payload)
+      .then((res) => {
+        badgeSave.textContent = `${t("label_saved")}: id=${res.id}`;
+        setHint(`${t("saved")}: ${lastExerciseTitle}`, 2000);
+      })
+      .catch((e) => {
+        badgeSave.textContent = `${t("label_saved")}: ${LANG === "ru" ? "ошибка" : "error"}`;
+        setHint(`${t("save_error")}: ${String(e)}`, 7000);
+      });
+
+    // дальше как было
     running = false;
     engine.stopMic();
   }

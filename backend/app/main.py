@@ -3,6 +3,10 @@ import json
 import secrets
 from typing import Any
 
+from datetime import datetime
+from passlib.context import CryptContext
+from sqlalchemy.exc import IntegrityError
+
 from fastapi import FastAPI, Depends, Header, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy.orm import Session
@@ -18,6 +22,11 @@ SessionLocal = make_session_factory(engine)
 
 # Create new tables (won't alter old ones)
 Base.metadata.create_all(bind=engine)
+
+pwd_ctx = CryptContext(schemes=["bcrypt_sha256"], deprecated="auto")
+
+def _norm_username(s: str) -> str:
+  return s.strip().lower()
 
 
 def ensure_schema_sqlite():
@@ -41,9 +50,74 @@ def ensure_schema_sqlite():
         conn.exec_driver_sql(
             "CREATE INDEX IF NOT EXISTS idx_training_attempts_user_id ON training_attempts(user_id)"
         )
+
+        # users: add auth / billing columns if missing
+        ucols = conn.exec_driver_sql("PRAGMA table_info(users)").all()
+        ucolnames = {c[1] for c in ucols}
+
+        def add_col_if_missing(name: str, ddl: str):
+            if name not in ucolnames:
+                conn.exec_driver_sql(ddl)
+
+        add_col_if_missing("username", "ALTER TABLE users ADD COLUMN username TEXT")
+        add_col_if_missing("username_norm", "ALTER TABLE users ADD COLUMN username_norm TEXT")
+        add_col_if_missing("password_hash", "ALTER TABLE users ADD COLUMN password_hash TEXT")
+        add_col_if_missing("registered_at", "ALTER TABLE users ADD COLUMN registered_at DATETIME")
+
+        add_col_if_missing("plan", "ALTER TABLE users ADD COLUMN plan TEXT")
+        add_col_if_missing("paid_until", "ALTER TABLE users ADD COLUMN paid_until DATETIME")
+
+        add_col_if_missing("ai_enabled", "ALTER TABLE users ADD COLUMN ai_enabled INTEGER")
+        add_col_if_missing("ai_credits_total", "ALTER TABLE users ADD COLUMN ai_credits_total INTEGER")
+        add_col_if_missing("ai_credits_used", "ALTER TABLE users ADD COLUMN ai_credits_used INTEGER")
+
+        add_col_if_missing("entitlements_json", "ALTER TABLE users ADD COLUMN entitlements_json TEXT")
+
+        # exercise_attempts.root_midi column
+        ecols = conn.exec_driver_sql("PRAGMA table_info(exercise_attempts)").all()
+        ecolnames = {c[1] for c in ecols}
+        if "root_midi" not in ecolnames:
+            conn.exec_driver_sql("ALTER TABLE exercise_attempts ADD COLUMN root_midi INTEGER")
+
+            # optional backfill for existing rows (best effort):
+            rows = conn.exec_driver_sql(
+                "SELECT id, steps_json FROM exercise_attempts WHERE root_midi IS NULL"
+            ).all()
+
+            for (aid, steps_json) in rows:
+                try:
+                    steps = json.loads(steps_json) if steps_json else []
+                    root = steps[0].get("target_midi") if steps else None
+                    if isinstance(root, int):
+                        conn.exec_driver_sql(
+                            "UPDATE exercise_attempts SET root_midi = ? WHERE id = ?",
+                            (root, aid),
+                        )
+                except Exception:
+                    pass
+
+        # indexes (safe)
+        # conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS idx_exercise_attempts_root_midi ON exercise_attempts(root_midi)")
+        
         conn.exec_driver_sql(
-            "CREATE INDEX IF NOT EXISTS idx_users_token ON users(token)"
+            "CREATE INDEX IF NOT EXISTS idx_exercise_attempts_user_root_midi ON exercise_attempts(user_id, root_midi)"
         )
+
+        # defaults for old rows (safe even if table already had values)
+        conn.exec_driver_sql("UPDATE users SET plan='free' WHERE plan IS NULL")
+        conn.exec_driver_sql("UPDATE users SET ai_enabled=0 WHERE ai_enabled IS NULL")
+        conn.exec_driver_sql("UPDATE users SET ai_credits_total=0 WHERE ai_credits_total IS NULL")
+        conn.exec_driver_sql("UPDATE users SET ai_credits_used=0 WHERE ai_credits_used IS NULL")
+        conn.exec_driver_sql("UPDATE users SET entitlements_json='{}' WHERE entitlements_json IS NULL")
+
+        # indexes / uniqueness
+        # conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS idx_users_username_norm ON users(username_norm)")
+        # уникальность — через UNIQUE INDEX (SQLite-friendly)
+        conn.exec_driver_sql("CREATE UNIQUE INDEX IF NOT EXISTS ux_users_username_norm ON users(username_norm)")
+        conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS idx_users_plan ON users(plan)")
+
+        # conn.exec_driver_sql("CREATE INDEX IF NOT EXISTS idx_users_token ON users(token)")
+        
         conn.exec_driver_sql(
             "CREATE INDEX IF NOT EXISTS idx_exercise_attempts_user_id ON exercise_attempts(user_id)"
         )
@@ -120,18 +194,111 @@ class AuthOut(BaseModel):
 @app.post("/api/auth/anonymous")
 def auth_anonymous(db: Session = Depends(get_db)) -> AuthOut:
     token = secrets.token_urlsafe(32)
-    u = User(token=token)
+    u = User(
+        token=token,
+        plan="free",
+        ai_enabled=0,
+        ai_credits_total=0,
+        ai_credits_used=0,
+        entitlements_json="{}",
+    )
     db.add(u)
     db.commit()
     db.refresh(u)
     return AuthOut(user_id=u.id, token=u.token, created_at=u.created_at.isoformat())
 
 
+class CredentialsIn(BaseModel):
+  username: str = Field(..., min_length=3, max_length=32)
+  password: str = Field(..., min_length=4, max_length=128)
+
+@app.post("/auth/register")
+@app.post("/api/auth/register")
+def auth_register(
+  payload: CredentialsIn,
+  db: Session = Depends(get_db),
+  u: User | None = Depends(get_current_user),
+) -> AuthOut:
+  u = require_user(u)
+
+  if u.username_norm:
+    raise HTTPException(status_code=409, detail="Already registered")
+
+  username = payload.username.strip()
+  if any(ch.isspace() for ch in username):
+    raise HTTPException(status_code=400, detail="Username must not contain spaces")
+
+  uname_norm = _norm_username(username)
+
+  # быстрый pre-check
+  taken = db.execute(select(User).where(User.username_norm == uname_norm)).scalar_one_or_none()
+  if taken:
+    raise HTTPException(status_code=409, detail="Username taken")
+
+  u.username = username
+  u.username_norm = uname_norm
+  u.password_hash = pwd_ctx.hash(payload.password)
+  u.registered_at = datetime.utcnow()
+
+  # defaults, если вдруг NULL
+  if not u.plan:
+    u.plan = "free"
+  if u.ai_enabled is None:
+    u.ai_enabled = 0
+  if u.ai_credits_total is None:
+    u.ai_credits_total = 0
+  if u.ai_credits_used is None:
+    u.ai_credits_used = 0
+  if not u.entitlements_json:
+    u.entitlements_json = "{}"
+
+  try:
+    db.commit()
+  except IntegrityError:
+    db.rollback()
+    # на случай гонки
+    raise HTTPException(status_code=409, detail="Username taken")
+
+  db.refresh(u)
+  return AuthOut(user_id=u.id, token=u.token, created_at=u.created_at.isoformat())
+
+
+@app.post("/auth/login")
+@app.post("/api/auth/login")
+def auth_login(payload: CredentialsIn, db: Session = Depends(get_db)) -> AuthOut:
+  uname_norm = _norm_username(payload.username)
+
+  u = db.execute(select(User).where(User.username_norm == uname_norm)).scalar_one_or_none()
+  if not u or not u.password_hash:
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+  if not pwd_ctx.verify(payload.password, u.password_hash):
+    raise HTTPException(status_code=401, detail="Invalid credentials")
+
+  return AuthOut(user_id=u.id, token=u.token, created_at=u.created_at.isoformat())
+
+
+
+
 @app.get("/me")
 @app.get("/api/me")
 def me(u: User | None = Depends(get_current_user)):
-    u = require_user(u)
-    return {"user_id": u.id, "created_at": u.created_at.isoformat()}
+  u = require_user(u)
+
+  plan = u.plan or "free"
+  ai_enabled = bool(u.ai_enabled) if u.ai_enabled is not None else False
+
+  return {
+    "user_id": u.id,
+    "created_at": u.created_at.isoformat(),
+    "username": u.username,
+    "is_registered": bool(u.username_norm),
+    "plan": plan,
+    "paid_until": u.paid_until.isoformat() if u.paid_until else None,
+    "ai_enabled": ai_enabled,
+    "ai_credits_total": int(u.ai_credits_total or 0),
+    "ai_credits_used": int(u.ai_credits_used or 0),
+  }
 
 
 # -----------------------
@@ -265,6 +432,8 @@ class ExerciseAttemptIn(BaseModel):
     mode: str = Field(..., min_length=1, max_length=16)        # assist/challenge
     timing_mode: str = Field(..., min_length=1, max_length=16) # flow/tempo
 
+    root_midi: int | None = Field(default=None, ge=0, le=127)
+    
     total_time_ms: int | None = Field(default=None, ge=0)
     score_total: float | None = Field(default=None, ge=0, le=100)
 
@@ -296,6 +465,7 @@ def save_exercise_attempt(
         user_id=u.id,
         exercise_id=payload.exercise_id,
         mode=payload.mode,
+        root_midi=payload.root_midi,
         timing_mode=payload.timing_mode,
         total_time_ms=payload.total_time_ms,
         score_total=payload.score_total,
@@ -316,39 +486,43 @@ def save_exercise_attempt(
 @app.get("/exercise_attempts")
 @app.get("/api/exercise_attempts")
 def list_exercise_attempts(
-    limit: int = 50,
-    db: Session = Depends(get_db),
-    u: User | None = Depends(get_current_user),
+  limit: int = 50,
+  offset: int = 0,
+  root_midi: int | None = None,
+  db: Session = Depends(get_db),
+  u: User | None = Depends(get_current_user),
 ):
-    u = require_user(u)
+  u = require_user(u)
 
-    rows = (
-        db.execute(
-            select(ExerciseAttempt)
-            .where(ExerciseAttempt.user_id == u.id)
-            .order_by(ExerciseAttempt.id.desc())
-            .limit(limit)
-        )
-        .scalars()
-        .all()
+  q = select(ExerciseAttempt).where(ExerciseAttempt.user_id == u.id)
+
+  if root_midi is not None:
+    q = q.where(ExerciseAttempt.root_midi == root_midi)
+
+  rows = (
+    db.execute(
+      q.order_by(ExerciseAttempt.id.desc()).offset(offset).limit(limit)
     )
+    .scalars()
+    .all()
+  )
 
-    out = []
-    for r in rows:
-        out.append(
-            {
-                "id": r.id,
-                "exercise_id": r.exercise_id,
-                "mode": r.mode,
-                "timing_mode": r.timing_mode,
-                "total_time_ms": r.total_time_ms,
-                "score_total": r.score_total,
-                "avg_time_to_green_ms": r.avg_time_to_green_ms,
-                "p95_time_to_green_ms": r.p95_time_to_green_ms,
-                "avg_abs_cents": r.avg_abs_cents,
-                "p95_abs_cents": r.p95_abs_cents,
-                "steps": json.loads(r.steps_json),
-                "created_at": r.created_at.isoformat(),
-            }
-        )
-    return out
+  out = []
+  for r in rows:
+    out.append({
+      "id": r.id,
+      "exercise_id": r.exercise_id,
+      "mode": r.mode,
+      "timing_mode": r.timing_mode,
+      "root_midi": r.root_midi,
+      "total_time_ms": r.total_time_ms,
+      "score_total": r.score_total,
+      "avg_time_to_green_ms": r.avg_time_to_green_ms,
+      "p95_time_to_green_ms": r.p95_time_to_green_ms,
+      "avg_abs_cents": r.avg_abs_cents,
+      "p95_abs_cents": r.p95_abs_cents,
+      "steps": json.loads(r.steps_json),
+      "created_at": r.created_at.isoformat(),
+    })
+
+  return out

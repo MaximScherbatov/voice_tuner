@@ -4,3 +4,4 @@ pydantic==2.8.2
 SQLAlchemy==2.0.32
 passlib[bcrypt]==1.7.4
 PyJWT==2.9.0
+bcrypt==3.2.2

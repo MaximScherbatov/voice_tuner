@@ -137,6 +137,46 @@ html[data-theme="light"] .card::before{ opacity:.08; }
   margin-right: -2px;
 }
 
+/* Top login link */
+.topLink{
+  display:inline-flex;
+  align-items:center;
+  height: 44px;
+  padding: 0 10px;
+  border-radius: 14px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: var(--muted);
+  font-weight: 900;
+}
+.topLink:hover{
+  background: var(--btnBgHover);
+  border-color: var(--line2);
+  color: var(--text);
+}
+
+/* Text inputs (auth) */
+.textField{
+  width: 100%;
+  min-height: 44px;
+  border-radius: 14px;
+  border: 1px solid var(--line2);
+  background: var(--panel);
+  color: var(--text);
+  padding: 10px 12px;
+  font-weight: 900;
+  outline: none;
+}
+.textField:focus{
+  border-color: rgba(96,165,250,.85);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.12);
+}
+
+.authErr{
+  color: rgba(251,113,133,.95);
+  font-weight: 900;
+}
+
 .iconBtn{
   min-height: 46px;
   border-radius: 16px;
