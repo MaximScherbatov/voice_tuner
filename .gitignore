@@ -30,3 +30,6 @@ Thumbs.db
 # local sqlite db (runtime)
 data/app.db
 data/*.db
+
+__pycache__/
+*.pyc
