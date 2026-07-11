@@ -223,6 +223,29 @@ const I18N: Record<Lang, Record<string, string>> = {
     cab_heat_red: "Красный = выше",
     cab_heat_brightness: "Яркость = успешность",
     cab_heat_meta: "Heatmap: последние {n} занятий в периоде",
+
+    help: "Help",
+    tip_help: "Как пользоваться",
+    help_title: "О сервисе и как пользоваться",
+    help_body: `
+    <p><b>Что это:</b> тренажёр для точного попадания в ноту и контроля стабильности (точность/устойчивость/скорость).</p>
+    <p><b>Как пользоваться:</b></p>
+    <ul>
+      <li>Выберите <b>упражнение</b> и <b>стартовую ноту</b> (root).</li>
+      <li>Выберите режим:
+        <ul>
+          <li><b>ASSIST</b> — эталон звучит постоянно (лучше в наушниках).</li>
+          <li><b>CHALLENGE</b> — эталон звучит кратко, затем вы поёте сами. На телефоне можно и без наушников.</li>
+        </ul>
+      </li>
+      <li>Нажмите <b>START</b>, пойте и старайтесь удерживать зелёную зону.</li>
+      <li>Нажмите <b>STOP</b> — появятся график и таблица шагов.</li>
+      <li>В <b>Личном кабинете</b> — история, фильтры, heatmap нот и прогресс по дням.</li>
+    </ul>
+    <p class="small" style="opacity:.75">
+    Подсказка: если без наушников эталон попадает в микрофон — используйте CHALLENGE.
+    </p>
+    `,
   },
   en: {
     app_title: "Voice Trainer",
@@ -414,6 +437,29 @@ const I18N: Record<Lang, Record<string, string>> = {
     cab_heat_red: "Red = above",
     cab_heat_brightness: "Brightness = success",
     cab_heat_meta: "Heatmap: last {n} sessions in period",
+
+    help: "Help",
+    tip_help: "How to use",
+    help_title: "About & How to use",
+    help_body: `
+    <p><b>What it is:</b> a voice tuner trainer for pitch accuracy, stability and speed.</p>
+    <p><b>How to use:</b></p>
+    <ul>
+      <li>Select an <b>exercise</b> and a <b>root note</b>.</li>
+      <li>Select a mode:
+        <ul>
+          <li><b>ASSIST</b> — reference tone plays continuously (headphones recommended).</li>
+          <li><b>CHALLENGE</b> — short reference tone, then you sing. Works better without headphones on phones.</li>
+        </ul>
+      </li>
+      <li>Press <b>START</b>, sing and try to stay in the green zone.</li>
+      <li>Press <b>STOP</b> to see the chart and step metrics.</li>
+      <li>Use <b>Account</b> for history, filters, heatmap and progress.</li>
+    </ul>
+    <p class="small" style="opacity:.75">
+    Tip: if the speaker leaks into the mic, use CHALLENGE mode.
+    </p>
+    `,
   },
 };
 
@@ -603,6 +649,8 @@ const ICONS = {
   timer: `<svg class="ico" viewBox="0 0 24 24"><path d="M9 1h6v2H9V1Zm3 4a9 9 0 1 0 9 9 9 9 0 0 0-9-9Zm0 16a7 7 0 1 1 7-7 7 7 0 0 1-7 7Zm.5-11H11v5l4.3 2.6.7-1.2-3.5-2.1V10Z"/></svg>`,
 
   user: `<svg class="ico" viewBox="0 0 24 24"><path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-4.42 0-8 2-8 4.5V21h16v-2.5C20 16 16.42 14 12 14Z"/></svg>`,
+
+  help: `<svg class="ico" viewBox="0 0 24 24"><path d="M11 18h2v-2h-2v2Zm1-16a9 9 0 1 0 .001 18.001A9 9 0 0 0 12 2Zm0 16a7 7 0 1 1 0-14 7 7 0 0 1 0 14Zm0-12a3 3 0 0 0-3 3h2a1 1 0 1 1 2 0c0 1-1 1.25-1.5 1.75-.5.5-.5.75-.5 1.25v1h2v-.5c0-.5.1-.6.6-1.1C14.4 11.2 15 10.4 15 9a3 3 0 0 0-3-3Z"/></svg>`,
 };
 
 try {
@@ -698,6 +746,25 @@ try {
   let belowEnergySince = 0;
 
   let recentRealPitchAt = 0;
+
+  let micBlockUntilMs = 0;
+  let micUnblockArmed = false;
+
+  function blockMicFor(ms: number) {
+    micBlockUntilMs = Math.max(micBlockUntilMs, nowMs() + ms);
+    micUnblockArmed = true;
+
+    // сброс отображения, чтобы кольцо не "залипало"
+    hzDisp = null;
+    ratioDisp = null;
+    ringFill = 0;
+    ringErrFill = 0;
+    win = [];
+    gateOn = false;
+    lastGoodSample = null;
+    centsHold = null;
+    inTuneMs = 0;
+  }
 
   const EQ_N = 18;
   let eqVals = Array(EQ_N).fill(0);
@@ -874,9 +941,10 @@ try {
           <button class="iconBtn mini" id="btnTopAccount" data-tip="${t("tip_account")}" style="display:none">
             ${ICONS.user}
           </button>
-
+          
           <button class="iconBtn mini" id="btnTopLang" data-tip="${t("tip_lang")}">${ICONS.globe}</button>
           <button class="iconBtn mini" id="btnTopTheme" data-tip="${t("tip_theme")}"></button>
+          <button class="iconBtn mini" id="btnTopHelp" data-tip="${t("tip_help")}">${ICONS.help}</button>
           <button class="iconBtn mini" id="btnTopSettings" data-tip="${t("tip_settings")}">${ICONS.gear}</button>
         </div>
       </div>
@@ -1105,6 +1173,17 @@ try {
       </div>
     </div>
 
+    <div class="modalBackdrop" id="helpModal">
+      <div class="card modalCard" style="max-width:760px;max-height:calc(100vh - 16px);overflow:auto">
+        <div class="modalHeader">
+          <div class="brand">${t("help_title")}</div>
+          <button class="iconBtn" id="btnHelpClose">${ICONS.stop}<span class="lbl">${t("close")}</span></button>
+        </div>
+        <div class="hr"></div>
+        <div class="helpText">${t("help_body")}</div>
+      </div>
+    </div>
+
     <div class="modalBackdrop" id="cabinetModal">
       <div class="card modalCard modalCardFull">
         <div class="modalHeader">
@@ -1236,6 +1315,17 @@ try {
     if (!el) throw new Error(`UI element not found: ${sel}`);
     return el as T;
   };
+
+  const btnTopHelp = q<HTMLButtonElement>("#btnTopHelp");
+  const helpModal = q<HTMLDivElement>("#helpModal");
+  const btnHelpClose = q<HTMLButtonElement>("#btnHelpClose");
+
+  const openHelp = () => (helpModal.style.display = "block");
+  const closeHelp = () => (helpModal.style.display = "none");
+
+  btnTopHelp.onclick = openHelp;
+  btnHelpClose.onclick = closeHelp;
+  helpModal.addEventListener("click", (e) => { if (e.target === helpModal) closeHelp(); });
 
   type Me = {
     user_id: number;
@@ -2599,8 +2689,13 @@ try {
     resetPitchState();
     applyAudioSettings();
 
-    if (trainMode === "assist") engine.startReference(targetHz);
-    else engine.playReference(targetHz, 0.55);
+    if (trainMode === "assist") {
+      engine.startReference(targetHz);
+    } else {
+      // CHALLENGE: блокируем анализ микрофона, пока играет эталон + небольшой хвост
+      blockMicFor(550 + 220); // 0.55s + 220ms echo tail (можете подкрутить)
+      engine.playReference(targetHz, 0.55);
+    }
   }
 
   function exFinalizeStep(): StepMetric {
@@ -3011,7 +3106,14 @@ try {
     }
 
     const pitchOk = fr.hz !== null && fr.hz >= MIN_HZ && fr.hz <= MAX_HZ;
-    const notMuted = !engine.isMicMuted();
+    const allowListen = nowMs() >= micBlockUntilMs;
+    const notMuted = !engine.isMicMuted() && allowListen;
+
+    // как только блок закончился — делаем мягкий сброс окна (1 раз)
+    if (micUnblockArmed && allowListen) {
+      micUnblockArmed = false;
+      resetPitchWindowOnly();
+    }
 
     const hasPitchRaw =
       fr.hz !== null &&
