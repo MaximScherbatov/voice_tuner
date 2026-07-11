@@ -2867,8 +2867,14 @@ try {
 
       if (trainMode === "challenge") {
         exPhase = "listen"; // reference only
+        // ВАЖНО: пока мы "слушаем" эталон — блокируем анализ микрофона полностью
+        micBlockUntilMs = nowMs() + 1e12; // "очень далеко в будущее"
+        micUnblockArmed = true;
+        blockMicFor(1); // просто чтобы сбросить кольцо/окна прямо сейчас
       } else {
-        exPhase = "loop";   // continuous loop
+        exPhase = "loop"; // continuous loop (assist)
+        micBlockUntilMs = 0;
+        micUnblockArmed = true;
       }
 
       exPhaseStart = nowMs();
@@ -2879,8 +2885,14 @@ try {
       resetPitchWindowOnly();
       applyAudioSettings();
 
-      if (exPhase === "listen" || exPhase === "loop") engine.startReference(targetHz);
+      // reference active in listen/loop
+      if (exPhase === "listen" || exPhase === "loop") {
+        engine.startReference(targetHz);
+      }
     } else {
+      // flow/single: start first step; exStartStep() уже делает blockMicFor() для challenge
+      micBlockUntilMs = 0;
+      micUnblockArmed = true;
       exStartStep(0);
     }
   }
@@ -3062,6 +3074,8 @@ try {
 
           resetPitchWindowOnly();
           engine.stopReference();
+          micBlockUntilMs = 0;
+          micUnblockArmed = true;
         }
       } else if (exPhase === "sing") {
         const tRel = tNow - exPhaseStart;
