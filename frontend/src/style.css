@@ -699,14 +699,30 @@ html[data-theme="light"] .tipBubble{
 }
 
 .hmScroll{
-  overflow:auto;
+  width: 100%;
+  overflow: auto;
 }
+
 .hmGrid{
-  display:grid;
-  grid-template-columns: 56px repeat(12, 26px);
-  gap: 6px;
-  min-width: 56px + (12 * 26px);
+  width: 100%;
+  display: grid;
+  grid-template-columns: 64px repeat(12, minmax(22px, 1fr));
+  gap: 8px;
+  align-items: center;
+
+  /* если экран слишком узкий — пусть будет горизонтальный скролл */
+  min-width: 520px;
 }
+
+.hmCell{
+  width: 100%;
+  aspect-ratio: 1 / 1;   /* квадрат */
+  border-radius: 10px;
+  border: 1px solid var(--line2);
+  background: rgba(255,255,255,.06);
+  cursor: pointer;
+}
+
 .hmHead{
   font-size:12px;
   opacity:.75;
@@ -719,14 +735,6 @@ html[data-theme="light"] .tipBubble{
   font-weight:1000;
   display:flex;
   align-items:center;
-}
-.hmCell{
-  width: 26px;
-  height: 26px;
-  border-radius: 8px;
-  border: 1px solid var(--line2);
-  background: rgba(255,255,255,.06);
-  cursor: pointer;
 }
 
 @media (max-width: 720px){
@@ -741,12 +749,68 @@ html[data-theme="light"] .tipBubble{
     grid-template-columns: repeat(2, minmax(0,1fr));
   }
   .hmGrid{
-    grid-template-columns: 52px repeat(12, 22px);
+    grid-template-columns: 56px repeat(12, minmax(18px, 1fr));
     gap: 6px;
+    min-width: 380px;
   }
   .hmCell{
-    width: 22px;
-    height: 22px;
-    border-radius: 7px;
+    border-radius: 8px;
   }
+}
+
+/* -----------------------
+   Modal style = main dark UI
+   (applies to settings + auth + cabinet)
+----------------------- */
+
+.modalBackdrop{
+  background: rgba(0,0,0,.66);
+  backdrop-filter: blur(10px);
+}
+
+/* modalCard уже имеет class="card modalCard", но modalCard часто переопределяют.
+   Мы принудительно делаем "тёмно-серый" как основной экран */
+.modalCard{
+  background: rgba(11,15,20,.98);
+  border: 1px solid rgba(255,255,255,.10);
+  box-shadow: 0 22px 90px rgba(0,0,0,.55);
+}
+
+html[data-theme="light"] .modalCard{
+  background: rgba(248,250,252,.98);
+  border: 1px solid rgba(15,23,42,.12);
+  box-shadow: 0 22px 90px rgba(2,6,23,.18);
+}
+
+/* -----------------------
+   Cabinet WOW blocks
+----------------------- */
+
+.noteChips{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+.noteChip{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding: 8px 10px;
+  border-radius: 14px;
+  border: 1px solid var(--line2);
+  background: rgba(255,255,255,.06);
+  cursor:pointer;
+  user-select:none;
+}
+.noteChip:hover{
+  border-color: rgba(96,165,250,.45);
+}
+.noteChip .n{
+  font-weight: 1000;
+}
+.noteChip .m{
+  font-size:12px;
+  opacity:.78;
+  font-weight: 900;
 }

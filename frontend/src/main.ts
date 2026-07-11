@@ -181,6 +181,48 @@ const I18N: Record<Lang, Record<string, string>> = {
     auth_switch_to_register: "Нет аккаунта? Регистрация",
     auth_err_taken: "Этот ник уже занят.",
     auth_err_invalid: "Неверный логин или пароль.",
+
+    cabinet_title: "Личный кабинет",
+    cabinet_tab_sessions: "Занятия",
+    cabinet_tab_stats: "Статистика",
+
+    cab_filter_note: "Нота",
+    cab_filter_oct: "Октава",
+    cab_filter_from: "С даты",
+    cab_filter_to: "По дату",
+    cab_filter_apply: "Применить",
+    cab_filter_reset: "Сброс",
+    cab_load_more: "Показать ещё",
+    cab_no_sessions: "Нет занятий по выбранным фильтрам.",
+    cab_open_in_results: "Открыть",
+
+    back: "Назад",
+
+    cab_trend_score: "SCORE",
+    cab_trend_accuracy: "ТОЧНОСТЬ",
+    cab_trend_speed: "СКОРОСТЬ",
+
+    cab_k_sessions: "Занятий",
+    cab_k_time: "Время",
+    cab_k_score: "Оценка",
+    cab_k_accuracy: "Точность",
+    cab_k_speed: "Скорость",
+    cab_k_streak: "Серия",
+
+    cab_s_avg: "среднее",
+    cab_s_abs_cents: "avg |cents|",
+    cab_s_t2g: "avg T2G",
+
+    cab_best_notes: "Сильные ноты",
+    cab_weak_notes: "Зоны роста",
+    cab_chip_success: "усп",
+    cab_chip_bias: "смещ",
+
+    cab_heat_green: "Зелёный = в цель",
+    cab_heat_blue: "Синий = ниже",
+    cab_heat_red: "Красный = выше",
+    cab_heat_brightness: "Яркость = успешность",
+    cab_heat_meta: "Heatmap: последние {n} занятий в периоде",
   },
   en: {
     app_title: "Voice Trainer",
@@ -330,6 +372,48 @@ const I18N: Record<Lang, Record<string, string>> = {
     auth_switch_to_register: "No account? Register",
     auth_err_taken: "This nickname is already taken.",
     auth_err_invalid: "Invalid username or password.",
+
+    cabinet_title: "Account",
+    cabinet_tab_sessions: "Sessions",
+    cabinet_tab_stats: "Stats",
+
+    cab_filter_note: "Note",
+    cab_filter_oct: "Octave",
+    cab_filter_from: "From",
+    cab_filter_to: "To",
+    cab_filter_apply: "Apply",
+    cab_filter_reset: "Reset",
+    cab_load_more: "Load more",
+    cab_no_sessions: "No sessions for selected filters.",
+    cab_open_in_results: "Open",
+
+    back: "Back",
+
+    cab_trend_score: "SCORE",
+    cab_trend_accuracy: "ACCURACY",
+    cab_trend_speed: "SPEED",
+
+    cab_k_sessions: "Sessions",
+    cab_k_time: "Time",
+    cab_k_score: "Score",
+    cab_k_accuracy: "Accuracy",
+    cab_k_speed: "Speed",
+    cab_k_streak: "Streak",
+
+    cab_s_avg: "avg",
+    cab_s_abs_cents: "avg |cents|",
+    cab_s_t2g: "avg T2G",
+
+    cab_best_notes: "Best notes",
+    cab_weak_notes: "Needs work",
+    cab_chip_success: "succ",
+    cab_chip_bias: "bias",
+
+    cab_heat_green: "Green = on target",
+    cab_heat_blue: "Blue = below",
+    cab_heat_red: "Red = above",
+    cab_heat_brightness: "Brightness = success",
+    cab_heat_meta: "Heatmap: last {n} sessions in period",
   },
 };
 
@@ -776,6 +860,7 @@ try {
   const refVol0 = loadNum("vtp_refVol", 60);
   const micSens0 = loadNum("vtp_micSens", 120);
 
+
   app.innerHTML = `
   <div class="container">
     <div class="card">
@@ -1019,6 +1104,130 @@ try {
         </div>
       </div>
     </div>
+
+    <div class="modalBackdrop" id="cabinetModal">
+      <div class="card modalCard modalCardFull">
+        <div class="modalHeader">
+          <div>
+            <div class="brand">${t("cabinet_title")}</div>
+            <div class="small" id="cabinetWho">—</div>
+          </div>
+          <button class="iconBtn" id="btnCabinetClose">${ICONS.stop}<span class="lbl">${t("close")}</span></button>
+        </div>
+
+        <div class="hr"></div>
+
+        <div class="cabTabs">
+          <button class="tabBtn active" id="cabTabSessions">${t("cabinet_tab_sessions")}</button>
+          <button class="tabBtn" id="cabTabStats">${t("cabinet_tab_stats")}</button>
+        </div>
+
+        <div class="cabBody">
+          <div id="cabSessionsPane">
+            <div class="cabFilters">
+              <div class="fGroup">
+                <label>${t("cab_filter_note")}</label>
+                <select class="btnLike" id="cabNote"></select>
+              </div>
+              <div class="fGroup">
+                <label>${t("cab_filter_oct")}</label>
+                <select class="btnLike" id="cabOct"></select>
+              </div>
+
+              <div class="fGroup">
+                <label>${t("cab_filter_from")}</label>
+                <input class="textField" id="cabFrom" type="date"/>
+              </div>
+              <div class="fGroup">
+                <label>${t("cab_filter_to")}</label>
+                <input class="textField" id="cabTo" type="date"/>
+              </div>
+
+              <div style="flex:1"></div>
+
+              <button class="iconBtn ledGreen" id="cabApply"><span class="lbl">${t("cab_filter_apply")}</span></button>
+              <button class="iconBtn" id="cabReset"><span class="lbl">${t("cab_filter_reset")}</span></button>
+            </div>
+
+            <div class="sessionsList" id="cabSessionsList"></div>
+
+            <div style="height:10px"></div>
+
+            <button class="iconBtn" id="cabLoadMore" style="display:none">
+              <span class="lbl">${t("cab_load_more")}</span>
+            </button>
+
+            <div class="small" id="cabEmpty" style="display:none;opacity:.75;margin-top:10px">
+              ${t("cab_no_sessions")}
+            </div>
+          </div>
+
+          <div id="cabStatsPane" style="display:none">
+            <div class="cabCards" id="cabSummary"></div>
+
+            <div class="hmWrap">
+              <div class="hmLegend">
+                <span>${t("cab_heat_green")}</span>
+                <span>${t("cab_heat_blue")}</span>
+                <span>${t("cab_heat_red")}</span>
+                <span>${t("cab_heat_brightness")}</span>
+              </div>
+
+              <div class="hmScroll">
+                <div class="hmGrid" id="cabHeatmap"></div>
+              </div>
+
+              <div class="small" id="cabHeatmapMeta" style="opacity:.7;margin-top:10px"></div>
+            </div>
+
+            <div style="height:10px"></div>
+
+            <div class="row" style="gap:8px;flex-wrap:wrap;margin:0 0 10px 0">
+              <button class="tabBtn active" id="cabTrendScore">${t("cab_trend_score")}</button>
+              <button class="tabBtn" id="cabTrendAccuracy">${t("cab_trend_accuracy")}</button>
+              <button class="tabBtn" id="cabTrendSpeed">${t("cab_trend_speed")}</button>
+            </div>
+
+            <canvas id="cabTrends" class="trendCanvas"></canvas>
+            <div class="small" id="cabTrendMeta" style="opacity:.7;margin-top:8px"></div>
+
+            <div class="row" style="gap:10px;flex-wrap:wrap;margin-top:10px">
+              <div class="cabCard" style="flex:1;min-width:260px">
+                <div class="k">${t("cab_best_notes")}</div>
+                <div class="noteChips" id="cabBestNotes"></div>
+              </div>
+              <div class="cabCard" style="flex:1;min-width:260px">
+                <div class="k">${t("cab_weak_notes")}</div>
+                <div class="noteChips" id="cabWeakNotes"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="cabDetailPane" style="display:none">
+            <div class="row" style="gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px">
+              <button class="iconBtn" id="cabDetailBack">${ICONS.left}<span class="lbl">${LANG === "ru" ? "Назад" : "Back"}</span></button>
+            </div>
+
+            <div class="header">
+              <div>
+                <div class="brand" id="cabDetailTitle">—</div>
+                <div class="resultsMeta" id="cabDetailMeta"></div>
+              </div>
+            </div>
+
+            <div style="margin-top:10px">
+              <canvas id="cabDetailCanvas" class="resultsCanvas" width="980" height="260"></canvas>
+            </div>
+
+            <div class="hr"></div>
+
+            <div style="overflow:auto">
+              <table class="resultsTable" id="cabDetailTable"></table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
   `;
 
@@ -1111,10 +1320,568 @@ try {
     openAuthModal(me?.is_registered ? "login" : "register");
   };
 
+  const cabinetModal = q<HTMLDivElement>("#cabinetModal");
+  const btnCabinetClose = q<HTMLButtonElement>("#btnCabinetClose");
+  const cabinetWho = q<HTMLDivElement>("#cabinetWho");
+
+  const cabTabSessions = q<HTMLButtonElement>("#cabTabSessions");
+  const cabTabStats = q<HTMLButtonElement>("#cabTabStats");
+  const cabSessionsPane = q<HTMLDivElement>("#cabSessionsPane");
+  const cabStatsPane = q<HTMLDivElement>("#cabStatsPane");
+
+  const cabNote = q<HTMLSelectElement>("#cabNote");
+  const cabOct = q<HTMLSelectElement>("#cabOct");
+  const cabFrom = q<HTMLInputElement>("#cabFrom");
+  const cabTo = q<HTMLInputElement>("#cabTo");
+  const cabApply = q<HTMLButtonElement>("#cabApply");
+  const cabReset = q<HTMLButtonElement>("#cabReset");
+
+  const cabSessionsList = q<HTMLDivElement>("#cabSessionsList");
+  const cabLoadMore = q<HTMLButtonElement>("#cabLoadMore");
+  const cabEmpty = q<HTMLDivElement>("#cabEmpty");
+
+  const cabSummary = q<HTMLDivElement>("#cabSummary");
+  const cabTrends = q<HTMLCanvasElement>("#cabTrends");
+  const cabHeatmap = q<HTMLDivElement>("#cabHeatmap");
+  const cabHeatmapMeta = q<HTMLDivElement>("#cabHeatmapMeta");
+
+  const cabTrendScore = q<HTMLButtonElement>("#cabTrendScore");
+  const cabTrendAccuracy = q<HTMLButtonElement>("#cabTrendAccuracy");
+  const cabTrendSpeed = q<HTMLButtonElement>("#cabTrendSpeed");
+  const cabTrendMeta = q<HTMLDivElement>("#cabTrendMeta");
+
+  const cabBestNotes = q<HTMLDivElement>("#cabBestNotes");
+  const cabWeakNotes = q<HTMLDivElement>("#cabWeakNotes");
+
+  type CabSessionLite = {
+    id: number;
+    created_at: string;
+    exercise_id: string;
+    mode: string;
+    timing_mode: string;
+    root_midi: number | null;
+    total_time_ms: number | null;
+    score_total: number | null;
+    avg_time_to_green_ms: number | null;
+    avg_abs_cents: number | null;
+  };
+
+  const cabDetailPane = q<HTMLDivElement>("#cabDetailPane");
+  const cabDetailBack = q<HTMLButtonElement>("#cabDetailBack");
+  const cabDetailTitle = q<HTMLDivElement>("#cabDetailTitle");
+  const cabDetailMeta = q<HTMLDivElement>("#cabDetailMeta");
+  const cabDetailCanvas = q<HTMLCanvasElement>("#cabDetailCanvas");
+  const cabDetailTable = q<HTMLTableElement>("#cabDetailTable");
+
+  function showCabDetail(show: boolean) {
+    cabDetailPane.style.display = show ? "block" : "none";
+
+    if (show) {
+      cabSessionsPane.style.display = "none";
+      cabStatsPane.style.display = "none";
+    } else {
+      // вернуть видимость по активной вкладке
+      const isSessions = cabTabSessions.classList.contains("active");
+      cabSessionsPane.style.display = isSessions ? "block" : "none";
+      cabStatsPane.style.display = isSessions ? "none" : "block";
+    }
+  }
+
+  cabDetailBack.onclick = () => showCabDetail(false);
+
+  // сохранение/загрузка состояния кабинета
+  type CabTrendMode = "score" | "accuracy" | "speed";
+
+  const CAB_STORE = {
+    note: "vtp_cab_note",
+    oct: "vtp_cab_oct",
+    from: "vtp_cab_from",
+    to: "vtp_cab_to",
+    tab: "vtp_cab_tab",
+    trend: "vtp_cab_trend",
+  };
+
+  function loadCabState() {
+    const n = localStorage.getItem(CAB_STORE.note);
+    const o = localStorage.getItem(CAB_STORE.oct);
+    const df = localStorage.getItem(CAB_STORE.from);
+    const dt = localStorage.getItem(CAB_STORE.to);
+
+    if (n !== null) cabNote.value = n;
+    if (o !== null) cabOct.value = o;
+    if (df) cabFrom.value = df;
+    if (dt) cabTo.value = dt;
+  }
+
+  function saveCabState() {
+    localStorage.setItem(CAB_STORE.note, cabNote.value);
+    localStorage.setItem(CAB_STORE.oct, cabOct.value);
+    localStorage.setItem(CAB_STORE.from, cabFrom.value);
+    localStorage.setItem(CAB_STORE.to, cabTo.value);
+    localStorage.setItem(CAB_STORE.tab, cabTabStats.classList.contains("active") ? "stats" : "sessions");
+    localStorage.setItem(CAB_STORE.trend, cabTrendMode);
+  }
+
+  let cabTrendMode: CabTrendMode = "score";
+  let cabTrendRows: any[] = [];
+
+  function loadCabTrendMode() {
+    const v = localStorage.getItem(CAB_STORE.trend);
+    if (v === "score" || v === "accuracy" || v === "speed") cabTrendMode = v;
+  }
+
+  function applyTrendMode(m: CabTrendMode) {
+    cabTrendMode = m;
+    localStorage.setItem(CAB_STORE.trend, m);
+
+    cabTrendScore.classList.toggle("active", m === "score");
+    cabTrendAccuracy.classList.toggle("active", m === "accuracy");
+    cabTrendSpeed.classList.toggle("active", m === "speed");
+
+    renderCabTrend();
+  }
+
+  cabTrendScore.onclick = () => applyTrendMode("score");
+  cabTrendAccuracy.onclick = () => applyTrendMode("accuracy");
+  cabTrendSpeed.onclick = () => applyTrendMode("speed");
+
+  function renderCabTrend() {
+    const days = cabTrendRows.map((x) => x.day as string);
+
+    if (cabTrendMode === "score") {
+      const ys = cabTrendRows.map((x) => (x.score_avg ?? null) as number | null);
+      cabTrendMeta.textContent = `${t("cab_k_score")} • ${t("cab_s_avg")}`;
+      drawTrendLine(cabTrends, days, ys, "rgba(52,211,153,.95)");
+      return;
+    }
+
+    if (cabTrendMode === "accuracy") {
+      const ys = cabTrendRows.map((x) => (x.abs_cents_avg ?? null) as number | null);
+      cabTrendMeta.textContent =
+        `${t("cab_k_accuracy")} • ${t("cab_s_abs_cents")} (${LANG === "ru" ? "меньше — лучше" : "lower is better"})`;
+      drawTrendLine(cabTrends, days, ys, "rgba(96,165,250,.95)");
+      return;
+    }
+
+    const ys = cabTrendRows.map((x) => (x.t2g_avg_ms ?? null) as number | null);
+    cabTrendMeta.textContent =
+      `${t("cab_k_speed")} • ${t("cab_s_t2g")} (${LANG === "ru" ? "меньше — лучше" : "lower is better"})`;
+    drawTrendLine(cabTrends, days, ys, "rgba(251,113,133,.95)");
+  }
+
+  function heatStyle(stepsN: number, succ: number | null, bias: number | null) {
+    let bg = "rgba(255,255,255,.06)";
+    let brd = "var(--line2)";
+
+    if (stepsN >= 3 && succ !== null) {
+      const s01 = clamp(succ / 100, 0, 1);
+      const absb = bias === null ? 0 : Math.abs(bias);
+      const thr = 5;
+
+      let base = "rgba(52,211,153,"; // green
+      if (bias !== null && absb > thr) base = bias > 0 ? "rgba(251,113,133," : "rgba(96,165,250,";
+      const a = 0.16 + 0.78 * s01;
+      bg = `${base}${a.toFixed(3)})`;
+      brd = "rgba(255,255,255,.10)";
+    }
+
+    return { bg, brd };
+  }
+
+  function noteShortLabel(midi: number) {
+    const n = midiToNote(midi);
+    return LANG === "ru" ? `${n.ru}${n.octave}` : `${n.name}${n.octave}`;
+  }
+
+  function setCabFilterByMidi(midi: number) {
+    const n = midiToNote(midi);
+    cabNote.value = n.name;
+    cabOct.value = String(n.octave);
+    saveCabState();
+    setCabTab("sessions");
+    void loadCabinetAll(true);
+  }
+
+  function renderNoteChips(
+    cells: Array<{ midi: number; steps: number; success_pct: number | null; bias_cents: number | null }>,
+  ) {
+    const ok = cells.filter((c) => (c.steps ?? 0) >= 3 && c.success_pct !== null);
+
+    const best = ok.slice().sort(
+      (a, b) => (b.success_pct! - a.success_pct!) || (Math.abs(a.bias_cents ?? 0) - Math.abs(b.bias_cents ?? 0))
+    ).slice(0, 8);
+
+    const weak = ok.slice().sort(
+      (a, b) => (a.success_pct! - b.success_pct!) || (Math.abs(b.bias_cents ?? 0) - Math.abs(a.bias_cents ?? 0))
+    ).slice(0, 8);
+
+    const render = (arr: typeof best, into: HTMLDivElement) => {
+      into.innerHTML = "";
+      for (const c of arr) {
+        const { bg, brd } = heatStyle(c.steps, c.success_pct, c.bias_cents);
+        const el = document.createElement("div");
+        el.className = "noteChip";
+        el.style.background = bg;
+        el.style.borderColor = brd;
+        el.innerHTML = `
+          <span class="n">${noteShortLabel(c.midi)}</span>
+          <span class="m">${t("cab_chip_success")}: ${c.success_pct!.toFixed(0)}%</span>
+          <span class="m">${t("cab_chip_bias")}: ${c.bias_cents !== null ? c.bias_cents.toFixed(1) + "c" : "—"}</span>
+        `;
+        el.onclick = () => setCabFilterByMidi(c.midi);
+        into.appendChild(el);
+      }
+      if (!into.children.length) {
+        const empty = document.createElement("div");
+        empty.className = "small";
+        empty.style.opacity = ".75";
+        empty.textContent = "—";
+        into.appendChild(empty);
+      }
+    };
+
+    render(best, cabBestNotes);
+    render(weak, cabWeakNotes);
+  }
+
+  let cabNextOffset: number | null = 0;
+  let cabLoading = false;
+
+  function ymd(d: Date) {
+    return d.toISOString().slice(0, 10);
+  }
+
+  function rootLabelFromMidi(midi: number | null) {
+    if (midi === null || !Number.isFinite(midi)) return "—";
+    const n = midiToNote(midi);
+    return LANG === "ru" ? `${n.ru}${n.octave} (${n.name}${n.octave})` : `${n.name}${n.octave}`;
+  }
+
+  async function apiGetJson(url: string) {
+    if (!AUTH_TOKEN) await ensureAuthToken();
+    const r = await fetch(url, {
+      headers: { Authorization: `Bearer ${AUTH_TOKEN}` },
+    });
+    if (!r.ok) throw new Error(await r.text());
+    return await r.json();
+  }
+
+  function setCabTab(tab: "sessions" | "stats") {
+    cabDetailPane.style.display = "none";
+    const isSessions = tab === "sessions";
+    cabTabSessions.classList.toggle("active", isSessions);
+    cabTabStats.classList.toggle("active", !isSessions);
+    cabSessionsPane.style.display = isSessions ? "block" : "none";
+    cabStatsPane.style.display = isSessions ? "none" : "block";
+  }
+
+  cabTabSessions.onclick = () => setCabTab("sessions");
+  cabTabStats.onclick = () => setCabTab("stats");
+
+  function openCabinet() {
+    cabinetModal.style.display = "block";
+
+    loadCabState();
+    loadCabTrendMode();
+
+    const savedTab = localStorage.getItem(CAB_STORE.tab);
+    setCabTab(savedTab === "stats" ? "stats" : "sessions");
+
+    void loadCabinetAll(true).catch((e) => setHint(`Cabinet load error: ${String(e)}`, 6000));
+  }
+
+  function closeCabinet() {
+    cabinetModal.style.display = "none";
+  }
+
+  btnCabinetClose.onclick = closeCabinet;
+  cabinetModal.addEventListener("click", (e) => {
+    if (e.target === cabinetModal) closeCabinet();
+  });
+
   btnTopAccount.onclick = (e) => {
     e.preventDefault();
-    // Этап 2: тут будет переход в кабинет
-    alert("Личный кабинет будет на следующем этапе.");
+    openCabinet();
+  };
+
+  // fill filters
+  cabNote.innerHTML = `<option value="">—</option>` + NOTE_NAMES.map((n) => `<option value="${n}">${n}</option>`).join("");
+  const CAB_OCT = [2, 3, 4, 5];
+  cabOct.innerHTML = `<option value="">—</option>` + CAB_OCT.map((o) => `<option value="${o}">${o}</option>`).join("");
+
+  // defaults: last 30 days
+  function setCabDefaultDates() {
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - 29);
+    cabFrom.value = ymd(from);
+    cabTo.value = ymd(to);
+  }
+
+  // Build query from filters
+  function cabRootMidiFilter(): number | null {
+    const note = cabNote.value.trim();
+    const octStr = cabOct.value.trim();
+    if (!note || !octStr) return null;
+    return noteOctToMidi(note, Number(octStr));
+  }
+
+  function cabParams(extra: Record<string, string> = {}) {
+    const p = new URLSearchParams();
+    const rm = cabRootMidiFilter();
+    if (rm !== null) p.set("root_midi", String(rm));
+    if (cabFrom.value) p.set("date_from", cabFrom.value);
+    if (cabTo.value) p.set("date_to", cabTo.value);
+    for (const [k, v] of Object.entries(extra)) p.set(k, v);
+    return p.toString();
+  }
+
+  function fmtNum(x: number | null, digits = 1) {
+    if (x === null || !Number.isFinite(x)) return "—";
+    return x.toFixed(digits);
+  }
+
+  function fmtTimeMs(ms: number | null) {
+    if (ms === null || !Number.isFinite(ms)) return "—";
+    const s = Math.round(ms / 1000);
+    if (s < 60) return `${s}s`;
+    return `${Math.floor(s / 60)}m ${s % 60}s`;
+  }
+
+  async function loadCabinetSessions(reset: boolean) {
+    if (cabLoading) return;
+    cabLoading = true;
+
+    try {
+      if (reset) {
+        cabNextOffset = 0;
+        cabSessionsList.innerHTML = "";
+        cabEmpty.style.display = "none";
+        cabLoadMore.style.display = "none";
+      }
+      if (cabNextOffset === null) return;
+
+      const qs = cabParams({ limit: "25", offset: String(cabNextOffset) });
+      const j = await apiGetJson(`/api/cabinet/sessions?${qs}`);
+
+      const items = (j.items ?? []) as CabSessionLite[];
+      cabNextOffset = (j.next_offset ?? null) as number | null;
+
+      for (const it of items) {
+        const dt = new Date(it.created_at);
+        const title = getExerciseById(it.exercise_id)?.title?.[LANG] ?? it.exercise_id;
+        const rootLab = rootLabelFromMidi(it.root_midi);
+
+        const el = document.createElement("div");
+        el.className = "sessionItem";
+        el.innerHTML = `
+          <div class="sessionTop">
+            <div class="sessionTitle">${title} • ${rootLab}</div>
+            <div class="sessionMeta">${formatDt(dt)}</div>
+          </div>
+          <div class="sessionGrid">
+            <div>
+              <div class="m">${t("results_score")}</div>
+              <div class="v">${it.score_total ?? "—"}%</div>
+            </div>
+            <div>
+              <div class="m">${t("results_time")}</div>
+              <div class="v">${fmtTimeMs(it.total_time_ms)}</div>
+            </div>
+            <div>
+              <div class="m">|cents|</div>
+              <div class="v">${fmtNum(it.avg_abs_cents, 1)}</div>
+            </div>
+            <div>
+              <div class="m">T2G</div>
+              <div class="v">${it.avg_time_to_green_ms ? Math.round(it.avg_time_to_green_ms) + " " + t("unit_ms") : "—"}</div>
+            </div>
+          </div>
+        `;
+
+        el.onclick = async () => {
+          try {
+            const det = await apiGetJson(`/api/cabinet/sessions/${it.id}`);
+
+            const prevGhost = loadGhostPack(det.exercise_id);
+            const g = (prevGhost && isGhostCompatible(prevGhost, det)) ? prevGhost : null;
+
+            showCabDetail(true);
+            renderResultsInto(det, g, cabDetailTitle, cabDetailMeta, cabDetailCanvas, cabDetailTable);
+          } catch (e) {
+            setHint(`${t("save_error")}: ${String(e)}`, 5000);
+          }
+        };
+
+        cabSessionsList.appendChild(el);
+      }
+
+      if (!cabSessionsList.children.length) {
+        cabEmpty.style.display = "block";
+      } else {
+        cabEmpty.style.display = "none";
+      }
+
+      cabLoadMore.style.display = cabNextOffset !== null ? "inline-flex" : "none";
+    } finally {
+      cabLoading = false;
+    }
+  }
+
+  cabLoadMore.onclick = () => void loadCabinetSessions(false);
+
+  function resizeCanvasToCss(c: HTMLCanvasElement) {
+    const r = c.getBoundingClientRect();
+    const dpr = Math.max(1, Math.floor(window.devicePixelRatio || 1));
+    c.width = Math.max(300, Math.round(r.width * dpr));
+    c.height = Math.max(160, Math.round(r.height * dpr));
+    return dpr;
+  }
+
+  function drawTrendLine(canvas: HTMLCanvasElement, xs: string[], ys: Array<number | null>, color: string) {
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = resizeCanvasToCss(canvas);
+    const w = canvas.width;
+    const h = canvas.height;
+
+    ctx.clearRect(0, 0, w, h);
+
+    const theme = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+    const grid = theme === "light" ? "rgba(15,23,42,.08)" : "rgba(255,255,255,.06)";
+    const label = theme === "light" ? "rgba(15,23,42,.55)" : "rgba(255,255,255,.55)";
+
+    const vals = ys.filter((v): v is number => v !== null && Number.isFinite(v));
+    if (!vals.length) {
+      ctx.fillStyle = label;
+      ctx.font = `${12 * dpr}px ui-sans-serif`;
+      ctx.fillText("—", 12 * dpr, 20 * dpr);
+      return;
+    }
+
+    const yMin = Math.min(...vals);
+    const yMax = Math.max(...vals);
+    const pad = 18 * dpr;
+    const x0 = pad, x1 = w - pad, y0 = pad, y1 = h - pad;
+
+    // grid
+    ctx.strokeStyle = grid;
+    ctx.lineWidth = 1 * dpr;
+    for (let i = 0; i <= 4; i++) {
+      const yy = y0 + (i / 4) * (y1 - y0);
+      ctx.beginPath();
+      ctx.moveTo(x0, yy);
+      ctx.lineTo(x1, yy);
+      ctx.stroke();
+    }
+
+    const xScale = (i: number) => x0 + (i / Math.max(1, xs.length - 1)) * (x1 - x0);
+    const yScale = (v: number) => y1 - ((v - yMin) / Math.max(1e-6, yMax - yMin)) * (y1 - y0);
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2.5 * dpr;
+    ctx.beginPath();
+    let started = false;
+    for (let i = 0; i < ys.length; i++) {
+      const v = ys[i];
+      if (v === null || !Number.isFinite(v)) continue;
+      const x = xScale(i);
+      const y = yScale(v);
+      if (!started) { ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+  }
+
+  async function loadCabinetStats() {
+    // summary
+    const sum = await apiGetJson(`/api/cabinet/summary?${cabParams()}`);
+    const attempts = sum.attempts ?? 0;
+    const timeSum = sum.time_sum_ms ?? 0;
+
+    cabSummary.innerHTML = `
+      <div class="cabCard"><div class="k">${t("cab_k_sessions")}</div><div class="v">${attempts}</div><div class="s">—</div></div>
+      <div class="cabCard"><div class="k">${t("cab_k_time")}</div><div class="v">${fmtTimeMs(timeSum)}</div><div class="s">—</div></div>
+      <div class="cabCard"><div class="k">${t("cab_k_score")}</div><div class="v">${sum.score_avg !== null ? sum.score_avg.toFixed(1) + "%" : "—"}</div><div class="s">${t("cab_s_avg")}</div></div>
+      <div class="cabCard"><div class="k">${t("cab_k_accuracy")}</div><div class="v">${sum.abs_cents_avg !== null ? sum.abs_cents_avg.toFixed(1) : "—"}</div><div class="s">${t("cab_s_abs_cents")}</div></div>
+      <div class="cabCard"><div class="k">${t("cab_k_speed")}</div><div class="v">${sum.t2g_avg_ms !== null ? Math.round(sum.t2g_avg_ms) + " " + t("unit_ms") : "—"}</div><div class="s">${t("cab_s_t2g")}</div></div>
+      <div class="cabCard"><div class="k">${t("cab_k_streak")}</div><div class="v">${sum.streak_days ?? 0}</div><div class="s">${LANG === "ru" ? "дней" : "days"}</div></div>
+    `;
+
+    // trends data (store globally, render with current mode)
+    cabTrendRows = (await apiGetJson(`/api/cabinet/trends?${cabParams()}`)) as any[];
+    applyTrendMode(cabTrendMode);
+
+    // heatmap
+    const hm = await apiGetJson(`/api/cabinet/heatmap?${cabParams({ max_sessions: "200" })}`);
+    const cells = (hm.cells ?? []) as Array<{ midi: number; steps: number; success_pct: number | null; bias_cents: number | null }>;
+    const map = new Map<number, any>();
+    for (const c of cells) map.set(c.midi, c);
+
+    // chips
+    renderNoteChips(cells);
+
+    // render grid (oct 2..5)
+    const notes = NOTE_NAMES;
+    const octs = CAB_OCT;
+
+    let html = `<div></div>`;
+    for (const nn of notes) html += `<div class="hmHead">${nn}</div>`;
+
+    for (const o of octs) {
+      html += `<div class="hmRowLab">${LANG === "ru" ? "Окт" : "Oct"} ${o}</div>`;
+      for (const nn of notes) {
+        const midi = noteOctToMidi(nn, o);
+        const c = map.get(midi);
+        const stepsN = c?.steps ?? 0;
+        const succ = c?.success_pct ?? null;
+        const bias = c?.bias_cents ?? null;
+
+        const st = heatStyle(stepsN, succ, bias);
+        const tip = c
+          ? `data-tip="steps: ${stepsN}\nsuccess: ${succ !== null ? succ.toFixed(0) + '%' : '—'}\nbias: ${bias !== null ? bias.toFixed(1) + 'c' : '—'}"`
+          : "";
+
+        html += `<div class="hmCell" style="background:${st.bg};border-color:${st.brd}" ${tip} data-midi="${midi}"></div>`;
+      }
+    }
+
+    cabHeatmap.innerHTML = html;
+
+    cabHeatmapMeta.textContent = formatTemplate(t("cab_heat_meta"), {
+      n: String(hm.max_sessions ?? 200),
+    });
+
+    // click cell -> set filter note/oct and go sessions
+    cabHeatmap.querySelectorAll<HTMLElement>(".hmCell").forEach((el) => {
+      el.onclick = () => {
+        const midi = Number(el.getAttribute("data-midi"));
+        if (!Number.isFinite(midi)) return;
+        setCabFilterByMidi(midi);
+      };
+    });
+  }
+
+  async function loadCabinetAll(resetSessions: boolean) {
+    const me = await fetchMe();
+    cabinetWho.textContent = me?.username ? `@${me.username}` : "—";
+
+    if (!cabFrom.value || !cabTo.value) setCabDefaultDates();
+
+    await loadCabinetSessions(resetSessions);
+    // stats можно грузить лениво: только когда открыта вкладка Stats,
+    // но для MVP подгрузим сразу один раз (быстро, т.к. агрегаты)
+    await loadCabinetStats();
+  }
+
+  cabApply.onclick = () => { saveCabState(); void loadCabinetAll(true); };
+  cabReset.onclick = () => {
+    cabNote.value = "";
+    cabOct.value = "";
+    setCabDefaultDates();
+    saveCabState();
+    void loadCabinetAll(true);
   };
 
   btnAuthSubmit.onclick = async () => {
@@ -1747,24 +2514,32 @@ try {
     ctx.fillText(String(yMin.toFixed(1)), 8, y1);
   }
 
-  function renderResults(payload: any, ghost: GhostPack | null = null) {
+  function renderResultsInto(
+    payload: any,
+    ghost: GhostPack | null,
+    titleEl: HTMLDivElement,
+    metaEl: HTMLDivElement,
+    canvasEl: HTMLCanvasElement,
+    tableEl: HTMLTableElement,
+  ) {
     const steps: StepMetric[] = payload.steps ?? [];
-    resultsWrap.style.display = "block";
 
-    if (!lastExerciseFinishedAt) lastExerciseFinishedAt = new Date();
-    resultsTitle.textContent = `${lastExerciseTitle}. ${formatDt(lastExerciseFinishedAt)}`;
+    const dt = payload.created_at ? new Date(payload.created_at) : (lastExerciseFinishedAt ?? new Date());
+    const exTitle = getExerciseById(payload.exercise_id)?.title?.[LANG] ?? payload.exercise_id;
+    titleEl.textContent = `${exTitle}. ${formatDt(dt)}`;
 
     const score = payload.score_total ?? "—";
     const timeS = payload.total_time_ms ? Math.round(payload.total_time_ms / 1000) : "—";
     const avgT2g = payload.avg_time_to_green_ms ? Math.round(payload.avg_time_to_green_ms) : null;
 
-    const rootMidi = Number(payload?.root_midi ?? localStorage.getItem("vtp_targetMidi") ?? "60");
-    const n = midiToNote(rootMidi);
-    const rootLabel = LANG === "ru"
-      ? `${n.ru}${n.octave} (${n.name}${n.octave})`
-      : `${n.name}${n.octave}`;
+    const rootMidi = Number(payload?.root_midi ?? 60);
+    const n0 = midiToNote(rootMidi);
+    const rootLabel =
+      LANG === "ru"
+        ? `${n0.ru}${n0.octave} (${n0.name}${n0.octave})`
+        : `${n0.name}${n0.octave}`;
 
-    resultsMeta.textContent =
+    metaEl.textContent =
       `${t("results_score")}: ${score}% • ${t("results_time")}: ${timeS}${LANG === "ru" ? "с" : "s"} • ${rootLabel}` +
       (avgT2g !== null ? ` • ${t("results_avg_t2g")}: ${avgT2g} ${t("unit_ms")}` : "");
 
@@ -1792,6 +2567,7 @@ try {
       const drift = s.drift_cents_per_s === null ? "—" : s.drift_cents_per_s.toFixed(2);
       const med0 = s.median_abs_cents === null ? "—" : s.median_abs_cents.toFixed(1);
       const p = s.p95_abs_cents === null ? "—" : s.p95_abs_cents.toFixed(1);
+
       return `<tr>
         <td class="smallMono">${s.step_index + 1}</td>
         <td class="smallMono">${noteLabel}</td>
@@ -1805,8 +2581,13 @@ try {
       </tr>`;
     }).join("");
 
-    resultsTable.innerHTML = head + rows;
-    drawResultsTrace(resultsCanvas, payload, ghost);
+    tableEl.innerHTML = head + rows;
+    drawResultsTrace(canvasEl, payload, ghost);
+  }
+
+  function renderResults(payload: any, ghost: GhostPack | null = null) {
+    resultsWrap.style.display = "block";
+    renderResultsInto(payload, ghost, resultsTitle, resultsMeta, resultsCanvas, resultsTable);
   }
 
   function exStartStep(stepIndex: number) {

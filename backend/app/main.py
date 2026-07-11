@@ -580,6 +580,7 @@ def _attempt_filters(
     return cond
 
 
+@app.get("/cabinet/sessions")
 @app.get("/api/cabinet/sessions")
 def cabinet_sessions(
     limit: int = 25,
@@ -634,6 +635,7 @@ def cabinet_sessions(
     }
 
 
+@app.get("/cabinet/sessions/{attempt_id}")
 @app.get("/api/cabinet/sessions/{attempt_id}")
 def cabinet_session_detail(
     attempt_id: int,
@@ -670,6 +672,7 @@ def cabinet_session_detail(
     }
 
 
+@app.get("/cabinet/summary")
 @app.get("/api/cabinet/summary")
 def cabinet_summary(
     root_midi: int | None = None,
@@ -730,6 +733,7 @@ def cabinet_summary(
     }
 
 
+@app.get("/cabinet/trends")
 @app.get("/api/cabinet/trends")
 def cabinet_trends(
     root_midi: int | None = None,
@@ -771,6 +775,7 @@ def cabinet_trends(
     return out
 
 
+@app.get("/cabinet/heatmap")
 @app.get("/api/cabinet/heatmap")
 def cabinet_heatmap(
     root_midi: int | None = None,
